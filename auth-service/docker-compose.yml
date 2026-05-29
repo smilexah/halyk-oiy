@@ -1,0 +1,144 @@
+version: "3.9"
+
+services:
+#  front:
+#    image: mobkus837/ui-tap-front:latest
+#    container_name: 'restaurant-front'
+#    networks:
+#      - app-platform
+#    restart: unless-stopped
+#    environment:
+#      - NODE_ENV=production
+#      - NEXT_PUBLIC_API_URL=${API_URL}
+#    ports:
+#      - "3000:3000"
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: restaurant-dozzle
+    ports:
+      - "9999:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    networks:
+      - app-platform
+
+#  restaurant-back:
+#    image: .
+#    container_name: restaurant-back
+#    ports:
+#      - "8888:8080"
+#    environment:
+#      - KEYCLOAK_URL=${KEYCLOAK_URL}
+#      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+#      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN}
+#      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+#      - KEYCLOAK_REALM=${KEYCLOAK_REALM}
+#
+#      - POSTGRES_ADDRESS=${POSTGRES_ADDRESS}
+#      - POSTGRES_ADDRESS_PORT=${POSTGRES_ADDRESS_PORT}
+#      - POSTGRES_DB_NAME=${POSTGRES_DB_NAME}
+#      - DATABASE_USERNAME=${DATABASE_USERNAME}
+#      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+#      - FILE_API_URL=${FILE_API_URL}
+#
+#    depends_on:
+#      - postgres
+#      - keycloak
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "100m"
+#        max-file: "20"
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost:8080/api/actuator/health" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#    restart: unless-stopped
+#    networks:
+#      - app-platform
+
+#  order-service:
+#    # ports:           ← убираем эту секцию
+#    #   - "8083:8080"  ← порт не публикуем
+#    expose:
+#      - "8080"         ← только внутри Docker сети
+
+  postgres:
+    container_name: auth-postgres
+    image: postgres:18
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth
+    ports:
+      - "6767:5432"
+    volumes:
+      - pg18_auth:/var/lib/postgresql   # 18+ expects this mount point
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d auth"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - app-platform
+
+  postgres-keycloak:
+    container_name: auth-postgres-keycloak
+    image: postgres:18
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "6868:5432"
+    volumes:
+      - pg18_auth_keycloak:/var/lib/postgresql # 18+ expects this mount point
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - app-platform
+
+  keycloak:
+    container_name: auth-keycloak
+    image: quay.io/keycloak/keycloak:26.4.0
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin}
+
+      - KC_DB=${KC_DB:-postgres}
+      - KC_DB_URL_HOST=${KC_DB_URL_HOST:-postgres-keycloak}
+      - KC_DB_URL_PORT=${KC_DB_URL_PORT:-5432}
+      - KC_DB_URL_DATABASE=${KC_DB_URL_DATABASE:-keycloak}
+      - KC_DB_USERNAME=${KC_DB_USERNAME:-postgres}
+      - KC_DB_PASSWORD=${KC_DB_PASSWORD:-postgres}
+
+      - KC_HOSTNAME_STRICT=${KC_HOSTNAME_STRICT:-false}
+      - KC_HOSTNAME_STRICT_HTTPS=${KC_HOSTNAME_STRICT_HTTPS:-false}
+      - KC_PROXY=${KC_PROXY:-edge}
+
+    depends_on:
+      postgres-keycloak:
+        condition: service_healthy
+    command: start-dev
+    ports:
+      - "8181:8080"
+    restart: unless-stopped
+    networks:
+      - app-platform
+
+
+networks:
+  app-platform:
+    driver: bridge
+
+volumes:
+  pg18_auth_keycloak:
+  pg18_auth:
