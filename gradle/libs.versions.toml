@@ -1,0 +1,12 @@
+[versions]
+springBoot = "3.4.1"
+springCloud = "2024.0.0"
+springDependencyManagement = "1.1.7"
+springdocOpenapi = "2.7.0"
+
+[libraries]
+springdoc-openapi-webmvc = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdocOpenapi" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "springDependencyManagement" }

@@ -2,7 +2,17 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/halyk-oiy.iml" filepath="$PROJECT_DIR$/.idea/halyk-oiy.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/auth-service/maqsat.auth-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/auth-service/maqsat.auth-service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/budget-service/maqsat.budget-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/budget-service/maqsat.budget-service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/common/maqsat.common.main.iml" filepath="$PROJECT_DIR$/.idea/modules/common/maqsat.common.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/eureka-server/maqsat.eureka-server.main.iml" filepath="$PROJECT_DIR$/.idea/modules/eureka-server/maqsat.eureka-server.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/family-service/maqsat.family-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/family-service/maqsat.family-service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/gateway/maqsat.gateway.main.iml" filepath="$PROJECT_DIR$/.idea/modules/gateway/maqsat.gateway.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/goals-service/maqsat.goals-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/goals-service/maqsat.goals-service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/integration-service/maqsat.integration-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/integration-service/maqsat.integration-service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/notification-service/maqsat.notification-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/notification-service/maqsat.notification-service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/transaction-service/maqsat.transaction-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/transaction-service/maqsat.transaction-service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/transaction-service/maqsat.transaction-service.test.iml" filepath="$PROJECT_DIR$/.idea/modules/transaction-service/maqsat.transaction-service.test.iml" />
     </modules>
   </component>
 </project>

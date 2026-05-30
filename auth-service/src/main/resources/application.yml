@@ -1,58 +1,49 @@
+server:
+  port: ${PORT:8089}
+
 spring:
   application:
     name: auth-service
-
-  datasource:
-    url: jdbc:postgresql://${POSTGRES_ADDRESS:localhost}:${POSTGRES_ADDRESS_PORT:6767}/${POSTGRES_DB_NAME:auth}
-    username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:postgres}
-
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: true
-    open-in-view: false
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OAUTH2_ISSUER:http://localhost:8181/realms/orderflow}
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8081/realms/maqsat}
 
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
+keycloak:
+  admin:
+    base-url: ${KEYCLOAK_BASE_URL:http://localhost:8081}
+    realm: ${KEYCLOAK_REALM:maqsat}
+    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:maqsat-admin}
+    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:maqsat-admin-secret}
 
-server:
-  servlet:
-    context-path: '/api/'
-  error:
-    include-message: always
-  port: ${PORT:8080}
-  address: 0.0.0.0
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOST:localhost}:${EUREKA_PORT:8761}/eureka
+  instance:
+    prefer-ip-address: true
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
+        include: health, info, prometheus
+  endpoint:
+    health:
+      show-details: always
+  otlp:
+    tracing:
+      endpoint: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
+  tracing:
+    sampling:
+      probability: 1.0
 
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-    fetch-registry: true
-    register-with-eureka: true
-  instance:
-    prefer-ip-address: true
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  structured:
+    format:
+      console: ecs

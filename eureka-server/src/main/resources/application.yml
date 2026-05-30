@@ -1,23 +1,27 @@
+server:
+  port: ${PORT:8761}
+
 spring:
   application:
     name: eureka-server
 
-server:
-  port: 8761
-
 eureka:
-  instance:
-    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
   client:
     register-with-eureka: false
     fetch-registry: false
-    service-url:
-      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
-  server:
-    wait-time-in-ms-when-sync-empty: 0
+  instance:
+    hostname: ${EUREKA_HOSTNAME:localhost}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health, info, prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  structured:
+    format:
+      console: ecs

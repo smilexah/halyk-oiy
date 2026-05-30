@@ -1,0 +1,80 @@
+{
+  "realm": "maqsat",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "accessTokenLifespan": 3600,
+  "roles": {
+    "realm": [
+      {
+        "name": "CUSTOMER",
+        "description": "Halyk SuperApp customer"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "maqsat-app",
+      "name": "Maqsat Mobile App",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["*"],
+      "webOrigins": ["*"]
+    },
+    {
+      "clientId": "maqsat-admin",
+      "name": "Maqsat Admin (service account)",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "maqsat-admin-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
+    }
+  ],
+  "users": [
+    {
+      "username": "papa",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Papa",
+      "lastName": "Maqsat",
+      "email": "papa@maqsat.kz",
+      "credentials": [{ "type": "password", "value": "papa", "temporary": false }],
+      "realmRoles": ["CUSTOMER"]
+    },
+    {
+      "username": "mama",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Mama",
+      "lastName": "Maqsat",
+      "email": "mama@maqsat.kz",
+      "credentials": [{ "type": "password", "value": "mama", "temporary": false }],
+      "realmRoles": ["CUSTOMER"]
+    },
+    {
+      "username": "child",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Bala",
+      "lastName": "Maqsat",
+      "email": "child@maqsat.kz",
+      "credentials": [{ "type": "password", "value": "child", "temporary": false }],
+      "realmRoles": ["CUSTOMER"]
+    },
+    {
+      "username": "service-account-maqsat-admin",
+      "enabled": true,
+      "serviceAccountClientId": "maqsat-admin",
+      "clientRoles": {
+        "realm-management": ["manage-users", "view-users", "query-users"]
+      }
+    }
+  ]
+}

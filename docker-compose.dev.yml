@@ -1,0 +1,49 @@
+# Fast dev/run override: run locally-built jars in JRE containers instead of building images.
+#   ./gradlew build
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# Infra (postgres/kafka/keycloak) comes from the base file unchanged.
+x-jvm: &jvm
+  image: eclipse-temurin:21-jre-alpine
+  build: !reset null
+  command: ["java", "-jar", "/app/app.jar"]
+
+services:
+  eureka-server:
+    <<: *jvm
+    volumes: ["./eureka-server/build/libs/eureka-server-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  gateway:
+    <<: *jvm
+    volumes: ["./gateway/build/libs/gateway-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  budget-service:
+    <<: *jvm
+    volumes: ["./budget-service/build/libs/budget-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  transaction-service:
+    <<: *jvm
+    volumes: ["./transaction-service/build/libs/transaction-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  goals-service:
+    <<: *jvm
+    volumes: ["./goals-service/build/libs/goals-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  family-service:
+    <<: *jvm
+    volumes: ["./family-service/build/libs/family-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  auth-service:
+    <<: *jvm
+    volumes: ["./auth-service/build/libs/auth-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  notification-service:
+    <<: *jvm
+    volumes: ["./notification-service/build/libs/notification-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  integration-service:
+    <<: *jvm
+    volumes: ["./integration-service/build/libs/integration-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  ai-assistant-service:
+    <<: *jvm
+    volumes: ["./ai-assistant-service/build/libs/ai-assistant-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]

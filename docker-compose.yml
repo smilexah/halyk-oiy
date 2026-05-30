@@ -1,0 +1,272 @@
+# Maqsat & Family — full local stack.
+#   docker compose up --build
+# Observability overlay (optional):
+#   docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build
+
+# ---- reusable fragments -------------------------------------------------------
+x-service-base: &service-base
+  build:
+    context: .
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  networks: [maqsat]
+
+x-service-env: &service-env
+  EUREKA_HOST: eureka-server
+  EUREKA_PORT: "8761"
+  # Keycloak's frontend URL is fixed to keycloak:8080 (KC_HOSTNAME), so every token's iss is
+  # http://keycloak:8080/realms/maqsat regardless of whether it was minted via the host (localhost:8081)
+  # or internally. Services validate that issuer and reach Keycloak's JWKS at the same internal URL.
+  KEYCLOAK_ISSUER: http://keycloak:8080/realms/maqsat
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  MANAGEMENT_OTLP_TRACING_ENDPOINT: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:-http://tempo:4318/v1/traces}
+
+x-db-env: &db-env
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: "5432"
+  DATABASE_USERNAME: ${DATABASE_USERNAME:-maqsat}
+  DATABASE_PASSWORD: ${DATABASE_PASSWORD:-maqsat}
+
+# ------------------------------------------------------------------------------
+services:
+  postgres:
+    image: postgres:16
+    container_name: maqsat-postgres
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME:-maqsat}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-maqsat}
+      POSTGRES_DB: maqsat
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    ports: ["${POSTGRES_HOST_PORT:-5432}:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-maqsat}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [maqsat]
+
+  kafka:
+    image: apache/kafka:3.9.0
+    container_name: maqsat-kafka
+    # KRaft single-node, two listeners:
+    #   INTERNAL (kafka:9092)  — used by in-network services (SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092)
+    #   EXTERNAL (localhost:29092) — for host clients / local debugging
+    # Listeners bind to the routable `kafka` host (not 0.0.0.0) because apache/kafka's KRaft format
+    # step rejects a 0.0.0.0 address in the advertised set; EXTERNAL still binds 0.0.0.0 so the host
+    # port-mapping works (it is advertised as localhost, never 0.0.0.0).
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://0.0.0.0:29092,CONTROLLER://kafka:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    networks:
+      - maqsat
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: maqsat-keycloak
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_db
+      KC_DB_USERNAME: ${DATABASE_USERNAME:-maqsat}
+      KC_DB_PASSWORD: ${DATABASE_PASSWORD:-maqsat}
+      # Fix the issuer/frontend URL so tokens minted via the host (localhost:8081) still carry
+      # iss=http://keycloak:8080/... which the in-network services validate. Backchannel stays open.
+      KC_HOSTNAME: http://keycloak:8080
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    ports: ["8081:8080"]
+    depends_on:
+      postgres: { condition: service_healthy }
+    networks: [maqsat]
+
+  eureka-server:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: eureka-server }
+    container_name: maqsat-eureka
+    environment:
+      PORT: "8761"
+    ports: ["8761:8761"]
+
+  gateway:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: gateway }
+    container_name: maqsat-gateway
+    environment:
+      <<: *service-env
+      PORT: "8080"
+    ports: ["8080:8080"]
+    depends_on:
+      eureka-server: { condition: service_started }
+      keycloak: { condition: service_started }
+
+  budget-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: budget-service }
+    container_name: maqsat-budget
+    environment:
+      <<: [*service-env, *db-env]
+      PORT: "8082"
+      POSTGRES_DB: budget_db
+    ports: ["8082:8082"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_started }
+      eureka-server: { condition: service_started }
+
+  transaction-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: transaction-service }
+    container_name: maqsat-transaction
+    environment:
+      <<: [*service-env, *db-env]
+      PORT: "8083"
+      POSTGRES_DB: transaction_db
+    ports: ["8083:8083"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_started }
+      eureka-server: { condition: service_started }
+
+  goals-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: goals-service }
+    container_name: maqsat-goals
+    environment:
+      <<: [*service-env, *db-env]
+      PORT: "8084"
+      POSTGRES_DB: goals_db
+    ports: ["8084:8084"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_started }
+      eureka-server: { condition: service_started }
+
+  family-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: family-service }
+    container_name: maqsat-family
+    environment:
+      <<: [*service-env, *db-env]
+      PORT: "8085"
+      POSTGRES_DB: family_db
+    ports: ["8085:8085"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_started }
+      eureka-server: { condition: service_started }
+
+  ai-assistant-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: ai-assistant-service }
+    container_name: maqsat-ai
+    environment:
+      <<: *service-env
+      PORT: "8086"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports: ["8086:8086"]
+    depends_on:
+      eureka-server: { condition: service_started }
+
+  notification-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: notification-service }
+    container_name: maqsat-notification
+    environment:
+      <<: *service-env
+      PORT: "8087"
+    ports: ["8087:8087"]
+    depends_on:
+      kafka: { condition: service_started }
+      eureka-server: { condition: service_started }
+      keycloak: { condition: service_started }
+
+  integration-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: integration-service }
+    container_name: maqsat-integration
+    environment:
+      <<: *service-env
+      PORT: "8088"
+    ports: ["8088:8088"]
+    depends_on:
+      kafka: { condition: service_started }
+      eureka-server: { condition: service_started }
+      keycloak: { condition: service_started }
+
+  auth-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: auth-service }
+    container_name: maqsat-auth
+    environment:
+      <<: *service-env
+      PORT: "8089"
+      KEYCLOAK_BASE_URL: http://keycloak:8080
+      KEYCLOAK_REALM: maqsat
+      KEYCLOAK_ADMIN_CLIENT_ID: maqsat-admin
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:-maqsat-admin-secret}
+    ports: ["8089:8089"]
+    depends_on:
+      keycloak: { condition: service_started }
+      eureka-server: { condition: service_started }
+
+networks:
+  maqsat:
+    driver: bridge
+
+volumes:
+  pgdata:
