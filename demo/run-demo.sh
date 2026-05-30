@@ -39,9 +39,10 @@ GID=$(curl -s -X POST "$GW/api/family/groups" -H "Authorization: Bearer $PAPA" \
   -H "Content-Type: application/json" --data-binary '{"name":"Maqsat Family"}' \
   | python -c "import sys,json;print(json.load(sys.stdin)['id'])")
 echo "group=$GID"
+INVITEE="bala-$RANDOM"   # unique so the demo is re-runnable
 curl -s -X POST "$GW/api/auth/invite" -H "Authorization: Bearer $PAPA" \
   -H "Content-Type: application/json" \
-  --data-binary "{\"groupId\":\"$GID\",\"username\":\"bala-jr\",\"role\":\"CHILD\",\"dailyLimit\":2500}"
+  --data-binary "{\"groupId\":\"$GID\",\"username\":\"$INVITEE\",\"role\":\"CHILD\",\"dailyLimit\":2500}"
 echo
 
 echo "############ 4. Conflict scenario (the headline flow) ############"

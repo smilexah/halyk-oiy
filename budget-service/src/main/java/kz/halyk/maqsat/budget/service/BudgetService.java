@@ -1,5 +1,6 @@
 package kz.halyk.maqsat.budget.service;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class BudgetService {
 
     private final BudgetPlanRepository planRepository;
+    private final MeterRegistry meterRegistry;
 
     @Transactional
     public BudgetPlan createPlan(String currentUserId, CreatePlanRequest request) {
@@ -79,6 +81,7 @@ public class BudgetService {
                 .ifPresentOrElse(
                         c -> {
                             c.setSpentAmount(c.getSpentAmount().add(amount));
+                            meterRegistry.counter("maqsat.budget.tracked", "category", categoryName).increment();
                             log.info("Tracked {} to category '{}' (spent now {})", amount, categoryName, c.getSpentAmount());
                         },
                         () -> log.debug("No category '{}' in plan {}", categoryName, plan.get().getId()));

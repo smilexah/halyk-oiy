@@ -19,6 +19,9 @@ x-service-env: &service-env
   # or internally. Services validate that issuer and reach Keycloak's JWKS at the same internal URL.
   KEYCLOAK_ISSUER: http://keycloak:8080/realms/maqsat
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  # Propagate the trace context across Kafka so a transaction -> kafka -> budget flow is one trace.
+  SPRING_KAFKA_TEMPLATE_OBSERVATIONENABLED: "true"
+  SPRING_KAFKA_LISTENER_OBSERVATIONENABLED: "true"
   MANAGEMENT_OTLP_TRACING_ENDPOINT: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:-http://tempo:4318/v1/traces}
 
 x-db-env: &db-env

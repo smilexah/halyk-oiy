@@ -1,5 +1,6 @@
 package kz.halyk.maqsat.transaction.service;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -27,6 +28,7 @@ public class TransactionService {
     private final CategorizationEngine categorizationEngine;
     private final TransactionEventPublisher publisher;
     private final FamilyClient familyClient;
+    private final MeterRegistry meterRegistry;
 
     @Transactional
     public Transaction ingest(String userId, String bearer, TransactionRequest request) {
@@ -47,6 +49,8 @@ public class TransactionService {
             txn.setStatus(TransactionStatus.PENDING_APPROVAL);
             repository.save(txn);
             publisher.publishLimitExceeded(txn, effectiveLimit(limit), shortfall);
+            meterRegistry.counter("maqsat.transactions", "status", "PENDING_APPROVAL").increment();
+            meterRegistry.counter("maqsat.limit.exceeded").increment();
             log.info("Child {} hit daily limit; txn {} is PENDING_APPROVAL (shortfall {})", userId, txn.getId(), shortfall);
             return txn;
         }
@@ -54,6 +58,7 @@ public class TransactionService {
         txn.setStatus(TransactionStatus.POSTED);
         repository.save(txn);
         publisher.publishCategorized(txn);
+        meterRegistry.counter("maqsat.transactions", "status", "POSTED").increment();
         return txn;
     }
 
@@ -94,6 +99,7 @@ public class TransactionService {
         txn.setStatus(TransactionStatus.POSTED);
         repository.save(txn);
         publisher.publishCategorized(txn);
+        meterRegistry.counter("maqsat.transactions.approved").increment();
         log.info("Transaction {} approved and POSTED", transactionId);
     }
 

@@ -1,5 +1,6 @@
 package kz.halyk.maqsat.family.service;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -27,6 +28,7 @@ public class FamilyService {
     private final FamilyGroupRepository groupRepository;
     private final MembershipRepository membershipRepository;
     private final FamilyEventPublisher eventPublisher;
+    private final MeterRegistry meterRegistry;
 
     @Transactional
     public GroupResponse createGroup(String creatorUserId, String name) {
@@ -123,6 +125,7 @@ public class FamilyService {
         membershipRepository.save(child);
 
         eventPublisher.publishOverrideApproved(transactionId, childUserId, approvedAmount, approverUserId);
+        meterRegistry.counter("maqsat.overrides.approved").increment();
         return new ApprovalResponse(transactionId, childUserId, approvedAmount, approverUserId, endOfDay);
     }
 }

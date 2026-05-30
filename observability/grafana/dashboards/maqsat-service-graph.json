@@ -1,0 +1,53 @@
+{
+  "uid": "maqsat-service-graph",
+  "title": "Maqsat & Family — Service Graph & Traces",
+  "tags": ["maqsat", "traces"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-30m", "to": "now" },
+  "templating": { "list": [] },
+  "annotations": { "list": [] },
+  "panels": [
+    {
+      "id": 1,
+      "type": "nodeGraph",
+      "title": "Service graph (generated from traces by Tempo)",
+      "datasource": { "type": "tempo", "uid": "tempo" },
+      "gridPos": { "h": 14, "w": 24, "x": 0, "y": 0 },
+      "targets": [
+        { "refId": "A", "queryType": "serviceMap", "datasource": { "type": "tempo", "uid": "tempo" } }
+      ],
+      "options": {}
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Span call rate (by service)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 14 },
+      "targets": [
+        { "refId": "A", "expr": "sum by (service) (rate(traces_spanmetrics_calls_total[1m]))", "legendFormat": "{{service}}", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10 }, "unit": "reqps" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "Service graph edges — client → server total requests",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 14 },
+      "targets": [
+        { "refId": "A", "expr": "sum by (client, server) (traces_service_graph_request_total)", "format": "table", "instant": true, "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "client": "Client", "server": "Server", "Value": "total requests" } } },
+        { "id": "sortBy", "options": { "fields": "", "sort": [ { "field": "total requests", "desc": true } ] } }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": { "showHeader": true }
+    }
+  ]
+}

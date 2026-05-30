@@ -62,11 +62,26 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 - Keycloak: http://localhost:8081 (admin/admin)
 - Gateway: http://localhost:8080
 
-Optional observability overlay (Grafana at http://localhost:3000):
+Optional observability overlay (Grafana at http://localhost:3000, anonymous Admin):
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build
+# or with the fast dev jars:
+docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.observability.yml up -d
 ```
+
+Provisioned Grafana dashboards (folder **Maqsat**):
+
+| Dashboard | What it shows |
+|-----------|---------------|
+| [Overview](http://localhost:3000/d/maqsat-overview) | service up/down, HTTP rate & p95, JVM heap, live logs (clickable **TraceID → Tempo**) |
+| [Service Graph & Traces](http://localhost:3000/d/maqsat-service-graph) | Node Graph from traces (incl. Kafka edges `transaction → notification`), span call rates, edge table |
+| [Business Metrics](http://localhost:3000/d/maqsat-business) | transactions by status, limits exceeded (SOS), parent approvals, spend tracked per category |
+
+Pipeline: every service ships **metrics** (Prometheus via Eureka SD), **traces** (OTLP → Tempo; one
+trace spans gateway → transaction → Kafka → budget/notification/integration), and **logs** (Alloy → Loki,
+ECS JSON with `traceId`). Tempo's metrics-generator feeds the service graph back into Prometheus.
+Correlation works both ways: a log's `traceId` links to its trace, and a span links to its logs.
 
 ## Demo
 

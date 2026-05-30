@@ -14,10 +14,10 @@ datasources:
     access: proxy
     url: http://loki:3100
     jsonData:
-      # Turn the ECS "trace.id" field in logs into a clickable link to Tempo.
+      # Turn the "traceId" field in the ECS logs into a clickable link to Tempo.
       derivedFields:
         - name: TraceID
-          matcherRegex: '"trace\.id":"(\w+)"'
+          matcherRegex: '"traceId":"(\w+)"'
           url: '${__value.raw}'
           datasourceUid: tempo
 
@@ -35,3 +35,6 @@ datasources:
         spanEndTimeShift: '1h'
       nodeGraph:
         enabled: true
+      # Service graph is built from Tempo's generated metrics stored in Prometheus.
+      serviceMap:
+        datasourceUid: prometheus
