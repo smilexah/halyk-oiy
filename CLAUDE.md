@@ -41,7 +41,10 @@ bash demo/run-demo.sh   # end-to-end: budget tracking, invite, conflict scenario
   and `CurrentUser`. Each service applies the Spring Boot plugin in its own `build.gradle.kts`.
 - **Ports / DBs / topics** are in `docker-compose.yml` and `docs/ARCHITECTURE.md` §3,5. Gateway 8080,
   Keycloak 8081, budget 8082, transaction 8083, goals 8084, family 8085, ai 8086, notification 8087,
-  integration 8088, auth 8089, eureka 8761.
+  integration 8088, auth 8089, eureka 8761. **Only gateway/keycloak/eureka (+ postgres/kafka for host
+  tooling) publish host ports**; the 8 application services use `expose:` (internal-only) so they're
+  reachable in-network via `lb://<svc>` but NOT directly from the host — all external API traffic must
+  go through the gateway. (Don't `curl localhost:8089` — it won't connect; use `localhost:8080/api/...`.)
 - **Cross-service state flows through Kafka; synchronous reads go through Eureka** (`@LoadBalanced
   WebClient` to `lb://<svc>`). The three event contracts (`TransactionCategorized`, `LimitExceeded`,
   `LimitOverrideApproved`) live in `common`; producers use `KafkaTemplate<String,Object>` keyed by userId.

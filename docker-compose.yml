@@ -144,7 +144,8 @@ services:
       <<: [*service-env, *db-env]
       PORT: "8082"
       POSTGRES_DB: budget_db
-    ports: ["8082:8082"]
+    # No host port: internal-only. Reachable in-network via lb://budget-service; external access goes through the gateway (8080).
+    expose: ["8082"]
     depends_on:
       postgres: { condition: service_healthy }
       kafka: { condition: service_started }
@@ -161,7 +162,8 @@ services:
       <<: [*service-env, *db-env]
       PORT: "8083"
       POSTGRES_DB: transaction_db
-    ports: ["8083:8083"]
+    # No host port: internal-only. Reachable in-network via lb://transaction-service; external access goes through the gateway (8080).
+    expose: ["8083"]
     depends_on:
       postgres: { condition: service_healthy }
       kafka: { condition: service_started }
@@ -178,7 +180,8 @@ services:
       <<: [*service-env, *db-env]
       PORT: "8084"
       POSTGRES_DB: goals_db
-    ports: ["8084:8084"]
+    # No host port: internal-only. Reachable in-network via lb://goals-service; external access goes through the gateway (8080).
+    expose: ["8084"]
     depends_on:
       postgres: { condition: service_healthy }
       kafka: { condition: service_started }
@@ -195,7 +198,8 @@ services:
       <<: [*service-env, *db-env]
       PORT: "8085"
       POSTGRES_DB: family_db
-    ports: ["8085:8085"]
+    # No host port: internal-only. Reachable in-network via lb://family-service; external access goes through the gateway (8080).
+    expose: ["8085"]
     depends_on:
       postgres: { condition: service_healthy }
       kafka: { condition: service_started }
@@ -212,7 +216,8 @@ services:
       <<: *service-env
       PORT: "8086"
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-    ports: ["8086:8086"]
+    # No host port: internal-only. Reachable in-network via lb://ai-assistant-service; external access goes through the gateway (8080).
+    expose: ["8086"]
     depends_on:
       eureka-server: { condition: service_started }
 
@@ -226,7 +231,8 @@ services:
     environment:
       <<: *service-env
       PORT: "8087"
-    ports: ["8087:8087"]
+    # No host port: internal-only. Reachable in-network via lb://notification-service; external access goes through the gateway (8080).
+    expose: ["8087"]
     depends_on:
       kafka: { condition: service_started }
       eureka-server: { condition: service_started }
@@ -242,7 +248,8 @@ services:
     environment:
       <<: *service-env
       PORT: "8088"
-    ports: ["8088:8088"]
+    # No host port: internal-only. Reachable in-network via lb://integration-service; external access goes through the gateway (8080).
+    expose: ["8088"]
     depends_on:
       kafka: { condition: service_started }
       eureka-server: { condition: service_started }
@@ -262,7 +269,8 @@ services:
       KEYCLOAK_REALM: maqsat
       KEYCLOAK_ADMIN_CLIENT_ID: maqsat-admin
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:-maqsat-admin-secret}
-    ports: ["8089:8089"]
+    # No host port: internal-only. Reachable in-network via lb://auth-service; external access goes through the gateway (8080).
+    expose: ["8089"]
     depends_on:
       keycloak: { condition: service_started }
       eureka-server: { condition: service_started }
