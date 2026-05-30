@@ -6,6 +6,8 @@ Microservices backend for a Halyk SuperApp add-on:
 2. **Goals / Maqsat** — savings held on virtual accounts.
 3. **Family** — a shared layer on top: shared budgets and goals, adult/child roles, child daily limits, and the **SOS approval** flow (a child hits a daily limit at the register → the parent gets a push → one-tap approval).
 
+📐 Полная архитектура и техническая спецификация: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
 ## Stack
 
 Java 21 · Gradle (Kotlin DSL) multi-module monorepo · Spring Boot 3.4.1 · Spring Cloud 2024.0.0 ·
@@ -61,6 +63,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 - Eureka dashboard: http://localhost:8761
 - Keycloak: http://localhost:8081 (admin/admin)
 - Gateway: http://localhost:8080
+- Aggregated Swagger UI (all services in one dropdown): http://localhost:8080/swagger-ui.html
 
 Optional observability overlay (Grafana at http://localhost:3000, anonymous Admin):
 

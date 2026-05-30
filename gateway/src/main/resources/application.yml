@@ -36,6 +36,35 @@ spring:
           uri: lb://ai-assistant-service
           predicates:
             - Path=/api/ai/**
+        # Proxy each service's OpenAPI doc so the gateway's Swagger UI can aggregate them.
+        - id: openapi-auth
+          uri: lb://auth-service
+          predicates: [ "Path=/v3/api-docs/auth-service" ]
+          filters: [ "RewritePath=/v3/api-docs/auth-service, /v3/api-docs" ]
+        - id: openapi-budget
+          uri: lb://budget-service
+          predicates: [ "Path=/v3/api-docs/budget-service" ]
+          filters: [ "RewritePath=/v3/api-docs/budget-service, /v3/api-docs" ]
+        - id: openapi-transaction
+          uri: lb://transaction-service
+          predicates: [ "Path=/v3/api-docs/transaction-service" ]
+          filters: [ "RewritePath=/v3/api-docs/transaction-service, /v3/api-docs" ]
+        - id: openapi-goals
+          uri: lb://goals-service
+          predicates: [ "Path=/v3/api-docs/goals-service" ]
+          filters: [ "RewritePath=/v3/api-docs/goals-service, /v3/api-docs" ]
+        - id: openapi-family
+          uri: lb://family-service
+          predicates: [ "Path=/v3/api-docs/family-service" ]
+          filters: [ "RewritePath=/v3/api-docs/family-service, /v3/api-docs" ]
+        - id: openapi-ai
+          uri: lb://ai-assistant-service
+          predicates: [ "Path=/v3/api-docs/ai-assistant-service" ]
+          filters: [ "RewritePath=/v3/api-docs/ai-assistant-service, /v3/api-docs" ]
+        - id: openapi-integration
+          uri: lb://integration-service
+          predicates: [ "Path=/v3/api-docs/integration-service" ]
+          filters: [ "RewritePath=/v3/api-docs/integration-service, /v3/api-docs" ]
   security:
     oauth2:
       resourceserver:
@@ -63,6 +92,19 @@ management:
   tracing:
     sampling:
       probability: 1.0
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    use-root-path: true
+    urls:
+      - { name: auth-service, url: /v3/api-docs/auth-service }
+      - { name: budget-service, url: /v3/api-docs/budget-service }
+      - { name: transaction-service, url: /v3/api-docs/transaction-service }
+      - { name: goals-service, url: /v3/api-docs/goals-service }
+      - { name: family-service, url: /v3/api-docs/family-service }
+      - { name: ai-assistant-service, url: /v3/api-docs/ai-assistant-service }
+      - { name: integration-service, url: /v3/api-docs/integration-service }
 
 logging:
   structured:

@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ai-assistant-service/maqsat.ai-assistant-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/ai-assistant-service/maqsat.ai-assistant-service.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/auth-service/maqsat.auth-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/auth-service/maqsat.auth-service.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/budget-service/maqsat.budget-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/budget-service/maqsat.budget-service.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/common/maqsat.common.main.iml" filepath="$PROJECT_DIR$/.idea/modules/common/maqsat.common.main.iml" />
