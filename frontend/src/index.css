@@ -1,0 +1,113 @@
+@import './styles/tokens.css';
+@import 'tailwindcss';
+
+/* ----------------------------------------------------------------------------
+   Map the runtime design tokens into Tailwind's theme so utilities like
+   `bg-card`, `text-muted`, `border-line`, `bg-accent`, `rounded-card`,
+   `shadow-card` resolve to the CSS variables — and therefore react to the
+   active [data-theme] / [data-accent] without any JS re-render.
+   (Surfaces are named ink/muted, not text/text2, to avoid clashing with
+   Tailwind's `text-*` namespace.)
+   -------------------------------------------------------------------------- */
+@theme inline {
+  --font-sans: 'Manrope', 'SF Pro Display', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-ink: var(--text);
+  --color-muted: var(--text2);
+  --color-line: var(--line);
+  --color-line2: var(--line2);
+
+  --color-gold: var(--gold);
+  --color-gold-d: var(--gold-d);
+  --color-gold-soft: var(--gold-soft);
+  --color-green: var(--green);
+  --color-green-d: var(--green-d);
+  --color-green-soft: var(--green-soft);
+  --color-pos: var(--pos);
+  --color-neg: var(--neg);
+
+  --color-accent: var(--accent);
+  --color-accent-d: var(--accent-d);
+  --color-accent-soft: var(--accent-soft);
+
+  --radius-card: var(--radius);
+  --shadow-card: var(--shadow);
+  --shadow-float: var(--shadow-lg);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background: radial-gradient(120% 80% at 50% -10%, #ffffff 0%, #ededed 45%, #e4e4e4 100%);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  [data-theme='dark'] body {
+    background: radial-gradient(120% 80% at 50% -10%, #16231d 0%, #0c130f 60%, #080d0a 100%);
+  }
+
+  @keyframes fade {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes sheetUp {
+    from {
+      transform: translateY(110%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes popIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes scan {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(150px);
+    }
+  }
+}
+
+@layer components {
+  /* brand gradient surfaces — referenced by name from components */
+  .bg-balance {
+    background: var(--balance-grad);
+  }
+  .shadow-glow {
+    box-shadow: 0 10px 30px rgba(var(--accent-glow), 0.28);
+  }
+  .glow-sm {
+    box-shadow: 0 8px 22px rgba(var(--accent-glow), 0.32);
+  }
+}
