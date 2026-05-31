@@ -1,5 +1,6 @@
-import { MEMBERS, KIDS } from '../data'
+import { MEMBERS, KIDS, type Kid, type Member } from '../data'
 import { useFamily } from '../FamilyContext'
+import { useMyGroups } from '../../../shared/api/hooks'
 import { useToast } from '../../../shared/ui/toast'
 import { fmt } from '../../../shared/lib/format'
 import SalaryBlock from '../distribute/SalaryBlock'
@@ -8,6 +9,24 @@ import { SectionTitle, AiTag, MoreLink, Hint, Badge } from '../components/bits'
 export default function PapaPane({ onInvite }: { onInvite: () => void }) {
   const { vcards, setDistributeOpen, openGoal } = useFamily()
   const { showToast } = useToast()
+
+  // Live family group (first one the user belongs to); demo fallback otherwise.
+  const { data: groups } = useMyGroups()
+  const group = groups?.[0]
+  const members: Member[] = group
+    ? group.members.map((m) => ({
+        av: m.role === 'ADULT' ? '👤' : '🧒',
+        name: m.userId.slice(0, 8),
+        role: m.role === 'ADULT' ? 'Взрослый' : 'Ребёнок',
+        badge: m.role === 'ADULT' ? 'owner' : 'child',
+        badgeText: m.role === 'ADULT' ? 'Взрослый' : 'Ребёнок',
+      }))
+    : MEMBERS
+  const kids: Kid[] = group
+    ? group.members
+        .filter((m) => m.role === 'CHILD' && m.dailyLimit != null)
+        .map((m) => ({ av: '🧒', name: m.userId.slice(0, 8), limit: Number(m.dailyLimit), usedPct: 0, pocket: '—', note: '' }))
+    : KIDS
 
   return (
     <div className="animate-[fade_.28s_ease]">
@@ -41,7 +60,7 @@ export default function PapaPane({ onInvite }: { onInvite: () => void }) {
         Участники группы
       </SectionTitle>
       <div className="overflow-hidden rounded-card bg-card shadow-card">
-        {MEMBERS.map((m) => (
+        {members.map((m) => (
           <div key={m.name} className="flex items-center gap-3 border-b border-line2 p-3.5 last:border-0">
             <span className="grid h-10 w-10 place-items-center rounded-full bg-bg text-xl">{m.av}</span>
             <div className="flex-1">
@@ -128,7 +147,7 @@ export default function PapaPane({ onInvite }: { onInvite: () => void }) {
       {/* kids limits */}
       <SectionTitle right={<AiTag>AI-контроль</AiTag>}>Карты детей · лимиты</SectionTitle>
       <div className="overflow-hidden rounded-card bg-card shadow-card">
-        {KIDS.map((k) => (
+        {kids.map((k) => (
           <div key={k.name} className="flex items-center gap-3 border-b border-line2 p-3.5 last:border-0">
             <span className="grid h-10 w-10 place-items-center rounded-full bg-bg text-xl">{k.av}</span>
             <div className="flex-1">

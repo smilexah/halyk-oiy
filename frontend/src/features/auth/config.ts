@@ -8,5 +8,5 @@ export const authConfig = {
   enabled: import.meta.env.VITE_AUTH_ENABLED === 'true',
   url: import.meta.env.VITE_KEYCLOAK_URL ?? 'http://localhost:8081',
   realm: import.meta.env.VITE_KEYCLOAK_REALM ?? 'maqsat',
-  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID ?? 'maqsat-web',
+  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID ?? 'maqsat-app',
 }

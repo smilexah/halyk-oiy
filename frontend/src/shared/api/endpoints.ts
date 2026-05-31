@@ -39,6 +39,7 @@ export const goalsApi = {
 }
 
 export const familyApi = {
+  myGroups: () => api.get<GroupResponse[]>('/family/groups'),
   group: (id: string) => api.get<GroupResponse>(`/family/groups/${id}`),
   createGroup: (body: CreateGroupRequest) => api.post<GroupResponse>('/family/groups', body),
   addMember: (groupId: string, body: AddMemberRequest) =>

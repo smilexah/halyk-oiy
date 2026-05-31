@@ -18,6 +18,7 @@ export const qk = {
   dashboard: ['budget', 'dashboard'] as const,
   transactions: ['transactions'] as const,
   goals: ['goals'] as const,
+  myGroups: ['family', 'groups'] as const,
   group: (id: string) => ['family', 'group', id] as const,
   offers: ['offers'] as const,
 }
@@ -32,6 +33,10 @@ export function useTransactions() {
 
 export function useGoals() {
   return useQuery({ queryKey: qk.goals, queryFn: goalsApi.list, enabled: useLiveEnabled() })
+}
+
+export function useMyGroups() {
+  return useQuery({ queryKey: qk.myGroups, queryFn: familyApi.myGroups, enabled: useLiveEnabled() })
 }
 
 export function useGroup(id: string | null | undefined) {

@@ -1,6 +1,7 @@
 package kz.halyk.maqsat.family.controller;
 
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import kz.halyk.maqsat.common.security.CurrentUser;
 import kz.halyk.maqsat.family.dto.AddMemberRequest;
@@ -38,6 +39,12 @@ public class FamilyController {
     @PostMapping("/groups/{id}/members")
     public ResponseEntity<GroupResponse> addMember(@PathVariable UUID id, @Valid @RequestBody AddMemberRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.addMember(id, request));
+    }
+
+    /** Groups the authenticated user belongs to — discovery for the app. */
+    @GetMapping("/groups")
+    public List<GroupResponse> myGroups() {
+        return service.myGroups(CurrentUser.current().userId());
     }
 
     @GetMapping("/groups/{id}")

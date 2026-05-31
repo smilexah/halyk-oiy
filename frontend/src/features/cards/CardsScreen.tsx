@@ -4,6 +4,8 @@ import Screen from '../../shared/ui/Screen'
 import ScreenHeader from '../../shared/ui/ScreenHeader'
 import { useToast } from '../../shared/ui/toast'
 import { cn } from '../../shared/lib/cn'
+import { useTransactions } from '../../shared/api/hooks'
+import { txnToRow } from '../../shared/api/view'
 
 const OPS = [
   { e: '⛽', n: 'АЗС Helios', d: 'Сегодня · Топливо', v: '−9 200 ₸', pos: false },
@@ -15,6 +17,8 @@ const OPS = [
 export default function CardsScreen() {
   const { showToast } = useToast()
   const [frozen, setFrozen] = useState(false)
+  const { data: txns } = useTransactions()
+  const ops = txns?.length ? txns.slice(0, 8).map(txnToRow) : OPS
 
   const toggleFreeze = () => {
     const next = !frozen
@@ -76,7 +80,7 @@ export default function CardsScreen() {
 
       <div className="mt-[22px]">
         <h3 className="mx-0.5 mb-2.5 text-[14px] font-extrabold">Операции по карте</h3>
-        {OPS.map((r, i) => (
+        {ops.map((r, i) => (
           <div key={i} className="flex items-center gap-3 border-b border-line2 py-[13px] last:border-0">
             <span className="grid h-[42px] w-[42px] place-items-center rounded-[13px] bg-gold-soft text-[19px]">{r.e}</span>
             <div className="flex-1">

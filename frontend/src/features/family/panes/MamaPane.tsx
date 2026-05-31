@@ -2,10 +2,14 @@ import { OFFERS } from '../data'
 import { useToast } from '../../../shared/ui/toast'
 import { useOverlay } from '../../../shared/ui/overlay'
 import { SectionTitle, AiTag, Hint } from '../components/bits'
+import { useOffers } from '../../../shared/api/hooks'
+import { offerToCard } from '../../../shared/api/view'
 
 export default function MamaPane() {
   const { showToast } = useToast()
   const { showSuccess } = useOverlay()
+  const { data: liveOffers } = useOffers()
+  const offers = liveOffers?.length ? liveOffers.map(offerToCard) : OFFERS
 
   return (
     <div className="animate-[fade_.28s_ease]">
@@ -79,7 +83,7 @@ export default function MamaPane() {
       {/* offers */}
       <SectionTitle right={<AiTag>AI</AiTag>}>Спец-предложения агента</SectionTitle>
       <div className="space-y-2">
-        {OFFERS.map((o) => (
+        {offers.map((o) => (
           <div key={o.a} className="flex items-center gap-3 rounded-card bg-card p-3.5 shadow-card">
             <span className="text-xl">{o.e}</span>
             <div className="flex-1">

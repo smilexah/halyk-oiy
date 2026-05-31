@@ -8,8 +8,21 @@ import { fmt } from '../../shared/lib/format'
 import { useToast } from '../../shared/ui/toast'
 import { useTheme } from '../theme/ThemeProvider'
 import { useOnboarding } from '../budget/onboarding'
+import { useGoals } from '../../shared/api/hooks'
 import BudgetPanel from '../budget/BudgetPanel'
 import type { ScreenId } from '../shell/nav'
+
+interface GoalRow {
+  emoji: string
+  name: string
+  sub: string
+  pct: number | null
+  tag: string | null
+}
+const DEMO_GOAL_ROWS: GoalRow[] = [
+  { emoji: '🏖️', name: 'Турция 2026', sub: '540 000 ₸ из 900 000 ₸ · вскладчину с друзьями', pct: 60, tag: 'личная · 60%' },
+  { emoji: '💚', name: 'Семейный кошелёк', sub: '200 000 ₸/мес · доступ у Динары (Kaspi → Halyk)', pct: null, tag: null },
+]
 
 const BALANCE = 146590
 
@@ -25,6 +38,18 @@ export default function HomeScreen({ onNavigate }: { onNavigate: (id: ScreenId) 
   const { theme, toggleTheme } = useTheme()
   const { finTick } = useOnboarding()
   const navigate = useNavigate()
+
+  // Live goals when authenticated; otherwise the demo rows.
+  const { data: liveGoals } = useGoals()
+  const goalRows: GoalRow[] = liveGoals?.length
+    ? liveGoals.slice(0, 3).map((g) => ({
+        emoji: '🎯',
+        name: g.name,
+        sub: `${fmt(g.allocatedAmount)} ₸ из ${fmt(g.targetAmount)} ₸`,
+        pct: Math.round(g.progressPercent),
+        tag: `${Math.round(g.progressPercent)}%`,
+      }))
+    : DEMO_GOAL_ROWS
 
   // After the first-run wizard finishes, land on «Мои финансы».
   useEffect(() => {
@@ -145,28 +170,24 @@ export default function HomeScreen({ onNavigate }: { onNavigate: (id: ScreenId) 
           </p>
 
           <div className="mt-3.5 overflow-hidden rounded-[20px] bg-card shadow-card">
-            <button onClick={() => navigate('/family')} className="flex w-full items-center gap-[13px] px-4 py-[15px] text-left active:bg-line2">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[14px] bg-gold-soft text-xl">🏖️</span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-2 text-[13.5px] font-bold">
-                  Турция 2026
-                  <span className="rounded-full bg-gold-soft px-2 py-0.5 text-[10px] font-bold text-gold-d">личная · 60%</span>
+            {goalRows.map((g, i) => (
+              <button key={i} onClick={() => navigate('/family')} className={'flex w-full items-center gap-[13px] px-4 py-[15px] text-left active:bg-line2' + (i > 0 ? ' border-t border-line2' : '')}>
+                <span className={'grid h-11 w-11 shrink-0 place-items-center rounded-[14px] text-xl ' + (i === 0 ? 'bg-gold-soft' : 'bg-green-soft')}>{g.emoji}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2 text-[13.5px] font-bold">
+                    {g.name}
+                    {g.tag && <span className="rounded-full bg-gold-soft px-2 py-0.5 text-[10px] font-bold text-gold-d">{g.tag}</span>}
+                  </span>
+                  <span className="mt-0.5 block text-[11.5px] text-muted">{g.sub}</span>
+                  {g.pct != null && (
+                    <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-line2">
+                      <span className="block h-full rounded-full bg-accent" style={{ width: `${g.pct}%` }} />
+                    </span>
+                  )}
                 </span>
-                <span className="mt-0.5 block text-[11.5px] text-muted">540 000 ₸ из 900 000 ₸ · вскладчину с друзьями</span>
-                <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-line2">
-                  <span className="block h-full rounded-full bg-accent" style={{ width: '60%' }} />
-                </span>
-              </span>
-              <span className="text-muted">→</span>
-            </button>
-            <button onClick={() => navigate('/family')} className="flex w-full items-center gap-[13px] border-t border-line2 px-4 py-[15px] text-left active:bg-line2">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[14px] bg-green-soft text-xl">💚</span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[13.5px] font-bold">Семейный кошелёк</span>
-                <span className="mt-0.5 block text-[11.5px] text-muted">200 000 ₸/мес · доступ у Динары (Kaspi → Halyk)</span>
-              </span>
-              <span className="text-muted">→</span>
-            </button>
+                <span className="text-muted">→</span>
+              </button>
+            ))}
             <button onClick={() => showToast('🎯 Создание цели и расчёт бюджета — в Maqsat & Family')} className="flex w-full items-center gap-[13px] border-t border-line2 px-4 py-[15px] text-left active:bg-line2">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[14px] bg-line2 text-xl">＋</span>
               <span className="min-w-0 flex-1">

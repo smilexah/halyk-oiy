@@ -4,7 +4,10 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import kz.halyk.maqsat.family.domain.ChildLimit;
 import kz.halyk.maqsat.family.domain.FamilyGroup;
 import kz.halyk.maqsat.family.domain.Membership;
@@ -64,6 +67,18 @@ public class FamilyService {
         }
 
         return GroupResponse.from(groupRepository.save(group));
+    }
+
+    /** Groups the current user belongs to (any role) — lets the app discover the family without a known id. */
+    @Transactional(readOnly = true)
+    public List<GroupResponse> myGroups(String userId) {
+        return membershipRepository.findByUserId(userId).stream()
+                .map(Membership::getGroup)
+                // dedupe by group id, preserve order
+                .collect(Collectors.toMap(FamilyGroup::getId, g -> g, (a, b) -> a, LinkedHashMap::new))
+                .values().stream()
+                .map(GroupResponse::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)

@@ -96,6 +96,9 @@ services:
       # Fix the issuer/frontend URL so tokens minted via the host (localhost:8081) still carry
       # iss=http://keycloak:8080/... which the in-network services validate. Backchannel stays open.
       KC_HOSTNAME: http://keycloak:8080
+      # Admin console uses a separate host so it's reachable from the host browser
+      # (localhost:8081) without bouncing to the in-network keycloak:8080 frontend URL.
+      KC_HOSTNAME_ADMIN: http://localhost:8081
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
