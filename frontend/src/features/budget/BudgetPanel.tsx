@@ -13,10 +13,10 @@ export default function BudgetPanel() {
     <ManageView
       mandatory={b.mandatory}
       reco={b.reco}
+      recoFunded={b.recoFunded}
       toggleMandatory={b.toggleMandatory}
       payMandatory={b.payMandatory}
       setRecoLimit={b.setRecoLimit}
-      adjustReco={b.adjustReco}
       confirmPlan={b.confirmPlan}
       replay={b.replay}
     />

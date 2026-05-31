@@ -20,9 +20,11 @@ const clone = <T>(arr: T[]): T[] => arr.map((x) => ({ ...x }))
 export function useBudget() {
   const { showToast } = useToast()
   const { showSuccess } = useOverlay()
-  const { onboarded, openFirstRun, reset: resetOnboarding } = useOnboarding()
+  const { onboarded, finTick, openFirstRun, reset: resetOnboarding } = useOnboarding()
 
   const step: BudgetStep = onboarded ? 'manage' : 'onboard'
+  // Bars fill to 100% («Выделено») right after the wizard finishes this session.
+  const recoFunded = finTick > 0
   const [mandatory, setMandatory] = useState<MandatoryItem[]>(() =>
     INITIAL_MANDATORY.map((c) => ({ ...c, paid: onboarded })),
   )
@@ -49,9 +51,6 @@ export function useBudget() {
   const setRecoLimit = (id: string, limit: number) =>
     setReco((list) => list.map((c) => (c.id === id ? { ...c, limit: Math.max(0, limit) } : c)))
 
-  const adjustReco = (id: string, delta: number) =>
-    setReco((list) => list.map((c) => (c.id === id ? { ...c, limit: Math.max(0, c.limit + delta) } : c)))
-
   const confirmPlan = () => {
     const overs = reco.filter((c) => c.limit < c.avg)
     showSuccess({
@@ -75,13 +74,13 @@ export function useBudget() {
 
   return {
     step,
+    recoFunded,
     mandatory,
     reco,
     start,
     toggleMandatory,
     payMandatory,
     setRecoLimit,
-    adjustReco,
     confirmPlan,
     replay,
   }

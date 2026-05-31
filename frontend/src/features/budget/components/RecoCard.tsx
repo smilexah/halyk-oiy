@@ -5,15 +5,19 @@ import type { RecoItem } from '../model'
 
 export default function RecoCard({
   item,
+  funded,
   onLimitChange,
 }: {
   item: RecoItem
+  /** after the wizard: bars are filled to the limit («Выделено») */
+  funded: boolean
   onLimitChange: (limit: number) => void
 }) {
   const [focused, setFocused] = useState(false)
-  const pct = Math.min(100, Math.round((item.spent / item.limit) * 100))
-  const over = item.spent > item.limit
-  const left = item.limit - item.spent
+  const spent = funded ? item.limit : item.spent
+  const pct = Math.min(100, Math.round((spent / item.limit) * 100))
+  const over = spent > item.limit
+  const left = item.limit - spent
 
   return (
     <div className="mb-2.5 rounded-card bg-card p-3.5 shadow-card">
@@ -43,10 +47,10 @@ export default function RecoCard({
         </div>
         <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted">
           <span>
-            Потрачено <b className="font-bold text-ink">{fmt(item.spent)} ₸</b>
+            {funded ? 'Выделено' : 'Потрачено'} <b className="font-bold text-ink">{fmt(spent)} ₸</b>
           </span>
           <span className={cn('font-bold', over ? 'text-neg' : 'text-pos')}>
-            {over ? `превышение ${fmt(-left)} ₸` : `осталось ${fmt(left)} ₸`}
+            {over ? `превышение ${fmt(-left)} ₸` : funded ? '100% · готово' : `осталось ${fmt(left)} ₸`}
           </span>
         </div>
       </div>
