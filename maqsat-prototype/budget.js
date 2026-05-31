@@ -15,20 +15,23 @@
 
   const INCOME = 320000;
   const MONTH = 'июнь';
+  // Карманные детям из мастера (Жанека 20 000 + Аминош 12 000) — уходят на детские счета,
+  // поэтому участвуют в распределении зарплаты.
+  const KIDS_TOTAL = 32000;
 
   // Блок 1 — обязательные платежи (единый счёт). paid = оплачено из зарплаты.
   // amount = сколько должно быть на счёте к концу месяца (цель)
   // have   = сколько уже лежит на едином счёте сейчас
   // sel    = пополнять из зарплаты (по умолчанию все отмечены)
   const MANDATORY = [
-    { id:'util', name:'Коммуналка', icon:'🏠', amount:33000, have:8000, sub:'свет · газ · вода',
+    { id:'util', name:'АО "АЛСЕКО"', icon:'🏠', amount:33000, have:8000, sub:'свет · вода',
       why:'Регулярные списания 1 числа последние 8 месяцев.', sel:true },
-    { id:'tax', name:'Wi-fi', icon:'🏛️', amount:9000, have:9000, sub:'Интернет,',
+    { id:'gas', name:'ТОО "Тауекел-Н-Алғабас"', icon:'🔥', amount:13000, have:0, sub:'газоснабжение',
+      why:'Ежемесячный платёж за газ — фиксированный.', sel:true },
+    { id:'tax', name:'ТОО «Meganet»', icon:'📶', amount:9000, have:9000, sub:'Мобильная связь и Интернет',
       why:'Годовой налог разбит помесячно — копим заранее.', sel:true },
-    { id:'subs', name:'Подписки', icon:'🔁', amount:6500, have:2000, sub:'Netflix · Spotify · iCloud',
+    { id:'subs', name:'APPLE.COM/BILL', icon:'🔁', amount:6500, have:2000, sub:'Netflix · Spotify · iCloud',
       why:'3 регулярных автоплатежа распознаны по истории карты.', sel:true },
-    { id:'kids', name:'Дети и образование', icon:'🎓', amount:71000, have:30000, sub:'карманные · кружки · общежитие',
-      why:'Ежемесячные переводы детям и за обучение — фиксированы.', sel:true },
   ];
   const needOf = c => Math.max(0, c.amount - c.have);
   const depOf  = c => c.sel ? needOf(c) : 0;
@@ -44,12 +47,25 @@
       why:'АЗС и мелкое обслуживание. СТO раз в полгода — отдельно.' },
   ];
 
-  const sumMandatory = () => MANDATORY.reduce((s,c)=>s+depOf(c),0);
-  const sumReco      = () => RECO.reduce((s,c)=>s+c.limit,0);
-  const afterMandatory = () => INCOME - sumMandatory();
-  const freeMoney      = () => afterMandatory() - sumReco();
+  /* ── ФОРМУЛЫ (всё считается от зарплаты) ─────────────────────
+     Зарплата = Обязательные(полные) + Дети + Потребности(лимиты) + Свободные
+     320 000   =     61 500          + 32 000 +    166 000        +   60 500
+     ────────────────────────────────────────────────────────────
+     sumMandatoryFull — цель по обязательным к концу месяца (полная сумма)
+     topUp            — сколько до-положить из этой зарплаты (цель − уже на счёте), по выбранным
+     sumReco          — сумма лимитов блока «Потребности»
+     spentReco        — уже потрачено по «Потребностям» в этом месяце
+     freeMoney        — Зарплата − обязательные − дети − потребности
+     mainBalance      — (потребности − потрачено) + свободные = остаток на основной карте */
+  const sumMandatoryFull = () => MANDATORY.reduce((s,c)=>s+c.amount,0);          // 61 500
+  const topUp            = () => MANDATORY.reduce((s,c)=>s+depOf(c),0);          // 42 500 (выбранные, до цели)
+  const sumReco          = () => RECO.reduce((s,c)=>s+c.limit,0);               // 166 000
+  const spentReco        = () => RECO.reduce((s,c)=>s+c.spent,0);               // 94 100
+  const freeMoney        = () => INCOME - sumMandatoryFull() - KIDS_TOTAL - sumReco();   // 60 500
+  const mainBalance      = () => (sumReco() - spentReco()) + Math.max(0, freeMoney());   // 132 400
 
   let state = 'onboard';
+  let recoFunded = false; // true once the user arrives from the first-run story → bars filled
   const root = () => q('#budgetRoot');
 
   /* ── PRE-ONBOARD INTRO (до первого распределения) ──────────── */
@@ -120,9 +136,12 @@
     </div>`;
   }
   function recoHTML(c){
-    const pct = Math.min(100, Math.round(c.spent / c.limit * 100));
-    const over = c.spent > c.limit;
-    const left = c.limit - c.spent;
+    const spent = recoFunded ? c.limit : c.spent;
+    const pct = Math.min(100, Math.round(spent / c.limit * 100));
+    const over = spent > c.limit;
+    const left = c.limit - spent;
+    const leftLbl = recoFunded ? 'Выделено' : 'Потрачено';
+    const stTxt = over ? `превышение ${money(-left)} ₸` : (recoFunded ? '100% · готово' : `осталось ${money(left)} ₸`);
     return `<div class="rcat" data-id="${c.id}">
       <div class="rc-top">
         <div class="rc-ic">${c.icon}</div>
@@ -131,7 +150,7 @@
       </div>
       <div class="rc-bar">
         <div class="rc-track"><i style="width:${pct}%" class="${over?'over':''}"></i></div>
-        <div class="rc-blbl"><span>Потрачено <b>${money(c.spent)} ₸</b></span><span class="st ${over?'over':'ok'}">${over?`превышение ${money(-left)} ₸`:`осталось ${money(left)} ₸`}</span></div>
+        <div class="rc-blbl"><span>${leftLbl} <b>${money(spent)} ₸</b></span><span class="st ${over?'over':'ok'}">${stTxt}</span></div>
       </div>
     </div>`;
   }
@@ -139,42 +158,41 @@
   function refreshRecoBar(c){
     const card = document.querySelector(`.rcat[data-id="${c.id}"]`);
     if(!card) return;
-    const pct = Math.min(100, Math.round(c.spent / c.limit * 100));
-    const over = c.spent > c.limit;
-    const left = c.limit - c.spent;
+    const spent = recoFunded ? c.limit : c.spent;
+    const pct = Math.min(100, Math.round(spent / c.limit * 100));
+    const over = spent > c.limit;
+    const left = c.limit - spent;
     const bar = card.querySelector('.rc-track i');
     if(bar){ bar.style.width = pct+'%'; bar.classList.toggle('over', over); }
     const st = card.querySelector('.rc-blbl .st');
-    if(st){ st.textContent = over ? `превышение ${money(-left)} ₸` : `осталось ${money(left)} ₸`; st.className = 'st '+(over?'over':'ok'); }
+    if(st){ st.textContent = over ? `превышение ${money(-left)} ₸` : (recoFunded ? '100% · готово' : `осталось ${money(left)} ₸`); st.className = 'st '+(over?'over':'ok'); }
+    const lbl = card.querySelector('.rc-blbl span:first-child');
+    if(lbl){ lbl.innerHTML = `${recoFunded?'Выделено':'Потрачено'} <b>${money(spent)} ₸</b>`; }
+    const mb = q('#bMainBal'); if(mb) mb.innerHTML = `${money(mainBalance())} <span class="c">₸</span>`;
   }
 
   function viewManage(){
     root().innerHTML = `
-      <div class="bdesc">
-        <span class="bot">🤖</span>
-        <div class="t">Я распределил вашу зарплату. <b>Обязательные платежи</b> закрываются с единого счёта, а остальное — <b>рекомендации</b>, куда можно потратить без отдельных счетов.</div>
-      </div>
-
       <div class="bsalary">
-        <div class="k">Зарплата · ${MONTH}</div>
-        <div class="v">${money(INCOME)} <span class="c">₸</span></div>
-        <div class="src">ТОО «Алтын Курылыс» · поступила сегодня</div>
+        <div class="k">Баланс основного счёта</div>
+        <div class="v" id="bMainBal">${money(mainBalance())} <span class="c">₸</span></div>
+        <div class="src">Основная карта ··5617</div>
       </div>
 
-      <div class="bblock-hd"><span class="bt">Обязательные платежи</span><span class="bp m">единый счёт</span></div>
-      <p class="bblock-sub">Эти платежи нужно оплатить в любом случае. Для них открыт один общий счёт. Отметьте, какие пополнить из зарплаты — по умолчанию все отмечены.</p>
-      <div id="bMand"></div>
-      <div class="bremain" id="bRemain"></div>
+      <div class="bblk">
+        <div class="bblock-hd"><span class="bt">Обязательные платежи</span><span class="bp m">отдельный счёт</span></div>
+        <div id="bMand"></div>
+        <div class="bremain stickybar" id="bRemain"></div>
+      </div>
 
-      <div class="bblock-hd" style="margin-top:22px;"><span class="bt">Рекомендации · куда потратить</span><span class="bp d">без счёта</span></div>
-      <p class="bblock-sub">На основе ваших трат за 3 месяца. Отдельные счета не создаются — это ориентир. При выходе за лимит придёт уведомление, но платёж всё равно пройдёт.</p>
-      ${RECO.map(recoHTML).join('')}
-      <div class="bfree" id="bFree"></div>
+      <div class="bblk">
+        <div class="bblock-hd" style="margin-top:22px;"><span class="bt">Ежемесячные потребности</span><span class="bp d">основной счёт</span></div>
+        ${RECO.map(recoHTML).join('')}
+        <div class="bfree" id="bFree"></div>
 
-      <button class="ai-fab" id="bChat"><span class="af-bot">💬</span><span class="af-t"><span class="a">Сказать ассистенту, что изменить</span><span class="b">«хочу меньше на еду», «урезать такси»…</span></span><span class="af-ch">→</span></button>
-
-      <div class="cta-wrap" style="margin-top:14px;">
-        <button class="btn btn-primary" id="bConfirm">Подтвердить план рекомендаций</button>
+        <div class="cta-wrap stickybar" style="margin-top:14px;">
+          <button class="btn btn-primary" id="bConfirm">Посмотреть рекомендаций</button>
+        </div>
       </div>
       <p class="disclaimer">Подтверждение касается только рекомендаций (Блок 2). Обязательные платежи оплачиваются кнопкой «Пополнить». <a id="bReplay" style="color:var(--accent);text-decoration:underline;cursor:pointer;">↺ первый вход</a></p>`;
 
@@ -202,7 +220,7 @@
       inp.addEventListener('input', ()=>{ c.limit=parseAmt(inp.value); refreshRecoBar(c); recalc(); });
       inp.addEventListener('blur', ()=>{ inp.value=money(c.limit); });
     });
-    q('#bChat').addEventListener('click', openChat);
+    const chatBtn = q('#bChat'); if(chatBtn) chatBtn.addEventListener('click', openChat);
     q('#bConfirm').addEventListener('click', confirmPlan);
     q('#bReplay').addEventListener('click', () => {
       if(window.resetFirstRun) window.resetFirstRun();
@@ -228,12 +246,9 @@
     const pending = MANDATORY.filter(c=>c.sel && needOf(c)>0 && !c.paid);
     const depPending = pending.reduce((s,c)=>s+needOf(c),0);
     q('#bRemain').innerHTML = `
-      <div class="br-top">
-        <div class="k">Останется на балансе<span class="s">после обязательных платежей</span></div>
-        <div class="amt">${money(afterMandatory())}<span>₸</span></div>
-      </div>
-      <button class="br-cta ${depPending<=0?'done':''}" id="bMandPay">${depPending<=0?'✓ Обязательное пополнено':`Пополнить выбранное · ${money(depPending)} ₸`}</button>`;
+      <button class="br-cta ${depPending<=0?'done':''}" id="bMandPay">${depPending<=0?'✓ Пополнено':`Пополнить выбранное · ${money(depPending)} ₸`}</button>`;
     const pb = q('#bMandPay'); if(pb) pb.addEventListener('click', payMandatory);
+    q('#bRemain').classList.toggle('paid', depPending<=0);
     const free = freeMoney();
     const fe = q('#bFree');
     if(free>0) fe.innerHTML = `<span class="fi">🎯</span><div class="ft"><div class="a">Свободно ${money(free)} ₸</div><div class="b">после рекомендаций — можно отложить в цель</div></div><span class="fch">→</span>`;
@@ -325,8 +340,8 @@
   }
   window.initBudget = initBudget;
   // Called by the first-run wizard once Face ID + распределение завершены.
-  window.budgetGoManage = () => { inited=true; MANDATORY.forEach(c=>c.paid=true); state='manage'; viewManage(); };
-  window.budgetShowIntro = () => { inited=true; state='onboard'; resetState(); viewOnboard(); };
+  window.budgetGoManage = () => { inited=true; MANDATORY.forEach(c=>c.paid=true); recoFunded=true; state='manage'; viewManage(); };
+  window.budgetShowIntro = () => { inited=true; recoFunded=false; state='onboard'; resetState(); viewOnboard(); };
   if(document.readyState!=='loading') initBudget();
   else document.addEventListener('DOMContentLoaded', initBudget);
 })();

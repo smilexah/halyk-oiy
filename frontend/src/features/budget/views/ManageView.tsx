@@ -71,7 +71,7 @@ export default function ManageView({
                 : 'w-full bg-accent text-white glow-sm',
             )}
           >
-            {depPending <= 0 ? '✓ Обязательное пополнено' : `Пополнить выбранное · ${fmt(depPending)} ₸`}
+            {depPending <= 0 ? '✓ Пополнено' : `Пополнить выбранное · ${fmt(depPending)} ₸`}
           </button>
         </div>
       </div>

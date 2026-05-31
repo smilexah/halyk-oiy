@@ -277,6 +277,13 @@ function Kid({
   const LIMITS = [1000, 2000, 5000, 10000]
   const set = (patch: Partial<FrKid>) => setKids((list) => list.map((x, i) => (i === idx ? { ...x, ...patch } : x)))
 
+  // Impact chart: base needs/free segments + a red «Вычет» segment for this kid's top-up.
+  const topup = k.skip ? 0 : k.topup
+  const base = segs.map((s) => ({ name: s.name, color: s.color, amt: s.amt, deduct: false }))
+  const impactSegs =
+    topup > 0 ? [...base, { name: `Вычет · ${k.name}`, amt: topup, color: '#C2443B', deduct: true }] : base
+  const impactTotal = impactSegs.reduce((s, x) => s + x.amt, 0)
+
   return (
     <>
       <h1 className="mt-1.5 text-[25px] font-extrabold leading-[1.18] tracking-[-0.025em]">{k.why}</h1>
@@ -305,16 +312,22 @@ function Kid({
       <div className="mt-3.5 rounded-2xl bg-card p-3.5 shadow-card">
         <div className="text-[12px] font-bold text-muted">Влияние на свободный бюджет</div>
         <div className="mt-2.5 flex h-4 overflow-hidden rounded-lg bg-line2">
-          {segs.map((s) => (
+          {impactSegs.map((s) => (
             <span key={s.name} style={{ flex: Math.max(s.amt, 1), background: s.color }} />
           ))}
         </div>
         <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5">
-          {segs.map((s) => (
+          {impactSegs.map((s) => (
             <div key={s.name} className="flex items-center gap-1.5 text-[11.5px] font-semibold">
               <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.color }} />
               {s.name}
-              <span className="ml-auto font-bold text-muted">{fmt(s.amt)}</span>
+              <span className="ml-auto text-[11px] font-extrabold text-ink">
+                {impactTotal > 0 ? Math.round((s.amt / impactTotal) * 100) : 0}%
+              </span>
+              <span className="font-bold text-muted">
+                {s.deduct ? '−' : ''}
+                {fmt(s.amt)}
+              </span>
             </div>
           ))}
         </div>

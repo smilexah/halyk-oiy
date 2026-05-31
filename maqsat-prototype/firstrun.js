@@ -18,11 +18,13 @@
   const MONTH = 'июнь';
 
   const MANDATORY = [
-    { id:'util', name:'Коммуналка', sub:'свет · газ · вода',     emoji:'🏠', amount:33000, on:true,
+    { id:'util', name:'АО "АЛСЕКО"', sub:'свет · вода',     emoji:'🏠', amount:33000, on:true,
       why:'Списания 1-го числа 8 месяцев подряд' },
-    { id:'tax',  name:'Wi-fi',     sub:'Интернет',          emoji:'🏛️', amount:9000,  on:true,
-      why:'Годовой налог — коплю помесячно' },
-    { id:'subs', name:'Подписки',   sub:'Netflix · Spotify · iCloud', emoji:'🔁', amount:6500, on:true,
+    { id:'gas',  name:'ТОО "Тауекел-Н-Алғабас"', sub:'газоснабжение', emoji:'🔥', amount:13000, on:true,
+      why:'Ежемесячный платёж за газ' },
+    { id:'tax',  name:'ТОО «Meganet»',     sub:'Мобильная связь и Интернет',          emoji:'📶', amount:9000,  on:true,
+      why:'Регулярный платёж за связь' },
+    { id:'subs', name:'APPLE.COM/BILL',   sub:'Netflix · Spotify · iCloud', emoji:'🔁', amount:6500, on:true,
       why:'3 автоплатежа распознаны по истории карты' },
   ];
 
@@ -33,7 +35,7 @@
       why:'Аминош вы тоже даёте карманные + кружок танцев. Откройте счёт с дневным лимитом — она тратит сама, а превышение вы подтверждаете.' },
   ];
 
-  const STEPS = ['mandatory','kid0','kid1','summary'];
+  const STEPS = ['mandatory','summary','kid0','kid1'];
   const TOTAL = STEPS.length;
   let step = 0;
 
@@ -41,14 +43,26 @@
   const sumKids = () => KIDS.filter(k=>!k.skip).reduce((s,k)=>s+k.topup,0);
   const freePool = () => SALARY - sumMandatory() - sumKids();
 
-  // free-money split (мягкие ориентиры)
-  const SPLIT = [
-    { id:'food', name:'Еда и продукты', pct:0.35, color:'#006B4F' },
-    { id:'tran', name:'Транспорт',      pct:0.15, color:'#77D9B2' },
-    { id:'fun',  name:'Развлечения',    pct:0.20, color:'#F1A400' },
-    { id:'free', name:'Свободные деньги',pct:0.30, color:'#D2D2D2' },
+  /* ── ФОРМУЛЫ ─────────────────────────────────────────────────
+     Зарплата = Обязательные + Дети + Потребности + Свободные
+     320 000   =   61 500    + 32 000 +  166 000   +  60 500
+     После шага «обязательные»:  остаток = Зарплата − обязательные      (258 500)
+     После шагов «дети»:         свободный пул = остаток − дети          (226 500)
+     Свободный пул делится на фикс. «Потребности» (166 000, те же категории,
+     что и в «Мои финансы») и «Свободные деньги» = пул − потребности.    */
+  const NEEDS = [
+    { id:'food', name:'Еда и продукты',    amt:90000, color:'#006B4F' },
+    { id:'fun',  name:'Развлечения',       amt:30000, color:'#F1A400' },
+    { id:'taxi', name:'Такси и транспорт', amt:18000, color:'#77D9B2' },
+    { id:'auto', name:'Авто и бензин',     amt:28000, color:'#C9A23F' },
   ];
-  const splitAmt = s => round100(freePool()*s.pct);
+  const sumNeeds = () => NEEDS.reduce((s,n)=>s+n.amt,0);                 // 166 000
+  // сегменты диаграммы = фикс. потребности + остаток как «Свободные деньги»
+  const splitSegs = () => {
+    const free = Math.max(0, freePool() - sumNeeds());
+    return [...NEEDS.map(n=>({...n})), { id:'free', name:'Свободные деньги', amt:free, color:'#D2D2D2' }];
+  };
+  const segPct = amt => { const p = freePool(); return p>0 ? Math.round(amt/p*100) : 0; };
 
   /* ── CSS ─────────────────────────────────────────────────── */
   function injectCSS(){
@@ -103,9 +117,10 @@
     .fr-x:active{ transform:scale(.92); }
     .fr-step{ font-size:13px; font-weight:800; color:var(--text2); background:var(--line2); padding:6px 12px; border-radius:20px; }
     .fr-body{ flex:1; overflow-y:auto; padding:8px 18px 14px; -webkit-overflow-scrolling:touch; }
-    .fr-foot{ flex-shrink:0; padding:12px 18px calc(14px + env(safe-area-inset-bottom)); background:var(--bg);
+    .fr-foot{ flex-shrink:0; padding:12px 0 calc(14px + env(safe-area-inset-bottom)); background:var(--bg);
       box-shadow:0 -8px 22px rgba(0,0,0,.05); }
     [data-theme="dark"] .fr-foot{ box-shadow:0 -8px 22px rgba(0,0,0,.3); }
+    .fr-foot .btn{ display:block; width:100%; border-radius:0; }
     .fr-ghost{ width:100%; margin-top:9px; border:none; background:transparent; color:var(--text2);
       font-family:var(--ff); font-size:13px; font-weight:700; cursor:pointer; padding:6px; }
     .fr-ghost:active{ opacity:.6; }
@@ -131,7 +146,7 @@
     .fr-check.on{ background:var(--green); border-color:var(--green); }
     .fr-mc-why{ display:flex; gap:7px; align-items:center; margin-top:9px; padding-top:9px; border-top:1px solid var(--line2);
       font-size:11px; color:var(--text2); font-weight:500; }
-    .fr-remain{ display:flex; align-items:center; gap:8px; justify-content:flex-end; margin-top:14px; }
+    .fr-remain{ display:flex; align-items:center; gap:8px; justify-content:flex-end; margin:0 0 10px; padding:0 18px; }
     .fr-remain .chip{ background:var(--line2); border-radius:22px; padding:9px 15px; font-size:13px; font-weight:700; color:var(--text2); }
     .fr-remain .chip b{ color:var(--text); font-weight:800; font-variant-numeric:tabular-nums; }
 
@@ -156,12 +171,20 @@
     .fr-chip:active{ transform:scale(.95); }
     .fr-impact{ background:var(--card); border-radius:16px; box-shadow:var(--shadow); padding:14px 15px; margin-top:14px; }
     .fr-impact > label{ font-size:12px; font-weight:700; color:var(--text2); }
+    .fr-impact-foot{ font-size:11px; font-weight:600; color:var(--text2); opacity:.8; margin-top:9px; text-align:right; }
     .fr-seg{ display:flex; height:16px; border-radius:9px; overflow:hidden; margin-top:10px; background:var(--line2); }
     .fr-seg i{ height:100%; }
     .fr-leg{ display:grid; grid-template-columns:1fr 1fr; gap:7px 12px; margin-top:12px; }
     .fr-leg .lr{ display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:600; color:var(--text); }
     .fr-leg .dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
     .fr-leg .lr .v{ margin-left:auto; color:var(--text2); font-weight:700; font-variant-numeric:tabular-nums; }
+    .fr-leg .lr .pct{ margin-left:auto; color:var(--text); font-weight:800; font-size:11px; }
+    .fr-leg .lr .pct + .v{ margin-left:8px; }
+    .fr-deduct{ margin-top:13px; padding-top:12px; border-top:1px solid var(--line2); }
+    .fr-deduct-hd{ display:flex; align-items:center; justify-content:space-between; font-size:11.5px; font-weight:700; color:var(--text2); }
+    .fr-deduct-hd .v{ color:#C2443B; font-weight:800; font-variant-numeric:tabular-nums; }
+    .fr-seg-rtl{ position:relative; display:block; }
+    .fr-seg-rtl i{ position:absolute; right:0; top:0; bottom:0; height:100%; background:#C2443B; border-radius:9px; transition:width .35s ease; }
 
     /* summary step */
     .fr-pool{ background:var(--card); border-radius:18px; box-shadow:var(--shadow); padding:17px 17px 16px; margin-top:20px; }
@@ -182,6 +205,37 @@
     .fr-freecard .ft .b{ font-size:12px; opacity:.92; margin-top:2px; font-weight:500; }
     .fr-freecard .fi{ width:42px; height:42px; border-radius:13px; background:rgba(255,255,255,.2); display:grid; place-items:center; font-size:20px; position:relative; z-index:1; flex-shrink:0; }
 
+    /* account-created overlay */
+    .fr-acct{ position:absolute; inset:0; z-index:128; background:rgba(8,16,13,.55); -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px);
+      display:none; flex-direction:column; align-items:stretch; justify-content:flex-end; padding:18px; }
+    .fr-acct.show{ display:flex; animation:frAcctBg .3s ease both; }
+    @keyframes frAcctBg{ from{ opacity:0 } to{ opacity:1 } }
+    .fr-acct-sheet{ background:var(--bg); border-radius:24px; padding:20px 18px calc(16px + env(safe-area-inset-bottom));
+      box-shadow:0 -10px 50px rgba(0,0,0,.35); animation:frAcctUp .42s cubic-bezier(.2,1,.3,1) both; }
+    @keyframes frAcctUp{ from{ transform:translateY(40px); opacity:.4 } to{ transform:none; opacity:1 } }
+    .fr-acct .ok-ring{ width:54px; height:54px; border-radius:50%; background:var(--green-soft); display:grid; place-items:center;
+      margin:2px auto 12px; font-size:26px; animation:frAcctPop .5s cubic-bezier(.2,1.4,.4,1) both .1s; }
+    @keyframes frAcctPop{ from{ transform:scale(0); } to{ transform:scale(1); } }
+    .fr-acct .ok-t{ text-align:center; font-size:19px; font-weight:800; letter-spacing:-.02em; }
+    .fr-acct .ok-s{ text-align:center; font-size:12.5px; color:var(--text2); font-weight:600; margin-top:4px; line-height:1.45; }
+    .fr-card{ margin-top:18px; border-radius:20px; padding:17px 18px; color:#fff; position:relative; overflow:hidden;
+      background:linear-gradient(135deg,#0b3a2c,#0f5a41 52%,#1b7d5c); box-shadow:0 14px 34px rgba(11,58,44,.4); }
+    .fr-card::after{ content:""; position:absolute; right:-30px; top:-40px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,.09); }
+    .fr-card::before{ content:""; position:absolute; right:18px; bottom:-30px; width:90px; height:90px; border-radius:50%; background:rgba(255,255,255,.06); }
+    .fr-card .cc-top{ display:flex; align-items:center; gap:9px; position:relative; z-index:1; }
+    .fr-card .cc-ic{ width:34px; height:34px; border-radius:10px; background:rgba(255,255,255,.18); display:grid; place-items:center; font-size:17px; }
+    .fr-card .cc-nm{ font-size:13.5px; font-weight:800; letter-spacing:-.01em; }
+    .fr-card .cc-no{ font-size:11px; opacity:.82; font-weight:600; margin-top:1px; }
+    .fr-card .cc-type{ margin-left:auto; font-size:9.5px; font-weight:900; letter-spacing:.05em; text-transform:uppercase; opacity:.85;
+      border:1px solid rgba(255,255,255,.35); border-radius:20px; padding:3px 9px; }
+    .fr-card .cc-amt{ font-size:28px; font-weight:800; letter-spacing:-.03em; margin-top:15px; font-variant-numeric:tabular-nums; position:relative; z-index:1; }
+    .fr-card .cc-amt span{ font-size:17px; opacity:.85; }
+    .fr-card .cc-bar{ margin-top:13px; position:relative; z-index:1; }
+    .fr-card .cc-track{ height:7px; border-radius:5px; background:rgba(255,255,255,.22); overflow:hidden; }
+    .fr-card .cc-track i{ display:block; height:100%; border-radius:5px; background:#fff; width:0; transition:width .7s cubic-bezier(.2,1,.3,1); }
+    .fr-card .cc-blbl{ display:flex; justify-content:space-between; gap:8px; margin-top:7px; font-size:10.5px; font-weight:700; opacity:.92; }
+    .fr-acct .ac-cta{ width:100%; margin-top:18px; }
+
     /* face id */
     .fr-face{ position:absolute; inset:0; z-index:130; background:rgba(8,16,13,.72); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
       display:none; flex-direction:column; align-items:center; justify-content:center; gap:20px; color:#fff; }
@@ -200,7 +254,7 @@
   }
 
   /* ── DOM build ───────────────────────────────────────────── */
-  let lockEl, wizEl, faceEl, built=false;
+  let lockEl, wizEl, faceEl, acctEl, built=false;
   function build(){
     if(built) return;
     built = true;
@@ -246,6 +300,18 @@
       <div class="ring" id="frFaceRing"><div class="scan"></div><div class="ico">🙂</div></div>
       <div><h3 id="frFaceH">Подтвердите по Face ID</h3><p>Открываем счета и пополняем</p></div>`;
     app.appendChild(faceEl);
+
+    acctEl = document.createElement('div');
+    acctEl.className = 'fr-acct'; acctEl.id = 'frAcct';
+    acctEl.innerHTML = `
+      <div class="fr-acct-sheet">
+        <div class="ok-ring">✓</div>
+        <div class="ok-t" id="frAcctT">Счёт создан</div>
+        <div class="ok-s" id="frAcctS"></div>
+        <div class="fr-card" id="frAcctCard"></div>
+        <button class="btn btn-primary ac-cta" id="frAcctCta">Продолжить</button>
+      </div>`;
+    app.appendChild(acctEl);
 
     q('#frPush').addEventListener('click', startFirstRun);
     lockEl.addEventListener('click', e => { if(e.target===lockEl) startFirstRun(); });
@@ -303,11 +369,9 @@
     body.innerHTML = `
       <h1 class="fr-h1">Все важные счета — под контролем. Настройте один раз и забудьте.</h1>
       <div class="fr-salary"><span class="ic">💳</span><span class="k">Зарплата</span><span class="v">${money(SALARY)} ₸</span></div>
-      <p style="font-size:12.5px;color:var(--text2);font-weight:600;line-height:1.5;margin:16px 2px 0;">Обязательные платежи я объединю на <b style="color:var(--text)">один счёт</b> — дальше они спишутся сами. Снимите галочку, если что-то платить не нужно.</p>
-      <div class="fr-mlist">${MANDATORY.map(mcard).join('')}</div>
-      <div class="fr-remain"><div class="chip" id="frRemainChip"></div></div>`;
-    foot.innerHTML = `<button class="btn btn-primary" id="frCta">Открыть счёт и пополнить</button>
-      <div class="fr-swipe">СВАЙП ВВЕРХ ⌃</div>`;
+      <div class="fr-mlist">${MANDATORY.map(mcard).join('')}</div>`;
+    foot.innerHTML = `<div class="fr-remain"><div class="chip" id="frRemainChip"></div></div>
+      <button class="btn btn-primary" id="frCta">Открыть счёт и пополнить</button>`;
     body.querySelectorAll('.fr-check').forEach(b => b.addEventListener('click', () => {
       const c = MANDATORY.find(x=>x.id===b.dataset.id); c.on=!c.on;
       b.classList.toggle('on', c.on);
@@ -315,9 +379,51 @@
       b.innerHTML = c.on ? '✓' : '';
       remainChip();
     }));
-    q('#frCta').addEventListener('click', next);
+    q('#frCta').addEventListener('click', () => {
+      const amt = sumMandatory();
+      const cnt = MANDATORY.filter(c=>c.on).length;
+      showAccountCreated({
+        title: 'Единый счёт создан',
+        sub: `Обязательные платежи объединены на один счёт и пополнены из зарплаты на ${MONTH}.`,
+        icon: '🧾',
+        name: 'Единый счёт · обязательное',
+        type: 'депозитный',
+        amount: amt,
+        pct: 100,
+        leftLbl: `${cnt} ${cnt===1?'платёж':'платежа'} привязано`,
+        rightLbl: 'пополнено на 100%'
+      }, next);
+    });
     remainChip();
   }
+
+  /* ── account-created overlay ─────────────────────────────── */
+  function showAccountCreated(o, onContinue){
+    build();
+    q('#frAcctT').textContent = o.title;
+    q('#frAcctS').textContent = o.sub;
+    const card = q('#frAcctCard');
+    const last4 = String(1000 + Math.floor(Math.random()*8999)).slice(-4);
+    card.innerHTML = `
+      <div class="cc-top">
+        <div class="cc-ic">${o.icon}</div>
+        <div><div class="cc-nm">${o.name}</div><div class="cc-no">•• ${last4} · Halyk</div></div>
+        <div class="cc-type">${o.type}</div>
+      </div>
+      <div class="cc-amt">${money(o.amount)} <span>₸</span></div>
+      <div class="cc-bar">
+        <div class="cc-track"><i></i></div>
+        <div class="cc-blbl"><span>${o.leftLbl}</span><span>${o.rightLbl}</span></div>
+      </div>`;
+    acctEl.classList.add('show');
+    // animate the progress bar fill
+    const bar = card.querySelector('.cc-track i');
+    if(bar){ bar.style.width = '0%'; setTimeout(()=>{ bar.style.width = Math.min(100,o.pct)+'%'; }, 160); }
+    const cta = q('#frAcctCta');
+    const handler = () => { cta.removeEventListener('click', handler); acctEl.classList.remove('show'); if(onContinue) onContinue(); };
+    cta.addEventListener('click', handler);
+  }
+
   function mcard(c){
     return `<div class="fr-mcard ${c.on?'':'off'}">
       <div class="fr-mc-top">
@@ -326,7 +432,6 @@
         <div class="fr-mc-amt">${money(c.amount)} ₸</div>
         <button class="fr-check ${c.on?'on':''}" data-id="${c.id}">${c.on?'✓':''}</button>
       </div>
-      <div class="fr-mc-why"><span>🤖</span><span>${c.why}</span></div>
     </div>`;
   }
   function remainChip(){
@@ -356,7 +461,7 @@
 
     const topup = q('#frTopup'), limit = q('#frLimit');
     topup.addEventListener('focus', ()=>{ topup.value=String(k.topup); topup.select(); });
-    topup.addEventListener('input', ()=>{ k.topup=parseAmt(topup.value); drawImpact(); });
+    topup.addEventListener('input', ()=>{ k.topup=parseAmt(topup.value); drawImpact(k); });
     topup.addEventListener('blur', ()=>{ topup.value=money(k.topup); });
     limit.addEventListener('focus', ()=>{ limit.value=String(k.limit); limit.select(); });
     limit.addEventListener('input', ()=>{ k.limit=parseAmt(limit.value); syncChips(idx); });
@@ -364,42 +469,59 @@
     body.querySelectorAll('.fr-chip').forEach(ch => ch.addEventListener('click', () => {
       k.limit = parseInt(ch.dataset.l); limit.value = money(k.limit); syncChips(idx);
     }));
-    q('#frCta').addEventListener('click', ()=>{ k.skip=false; next(); });
-    q('#frSkip').addEventListener('click', ()=>{ k.skip=true; next(); });
-    drawImpact();
+    q('#frCta').addEventListener('click', ()=>{ k.skip=false;
+      showAccountCreated({
+        title: `Счёт «${k.name}» открыт`,
+        sub: `Карта с дневным лимитом ${money(k.limit)} ₸. ${k.name} тратит сама, превышение вы подтверждаете.`,
+        icon: k.emoji,
+        name: `Счёт «${k.name}»`,
+        type: 'детская карта',
+        amount: k.topup,
+        pct: 100,
+        leftLbl: `лимит ${money(k.limit)} ₸/день`,
+        rightLbl: 'пополнено на 100%'
+      }, advance);
+    });
+    q('#frSkip').addEventListener('click', ()=>{ k.skip=true; advance(); });
+    drawImpact(k);
   }
+  // advance to the next step, or finish (Face ID) if this is the last step
+  function advance(){ if(step >= TOTAL-1) runFace(); else next(); }
   function syncChips(idx){
     const k = KIDS[idx];
     document.querySelectorAll('#frBody .fr-chip').forEach(ch => ch.classList.toggle('on', parseInt(ch.dataset.l)===k.limit));
   }
-  function drawImpact(){
+  function drawImpact(k){
     const el = q('#frImpact'); if(!el) return;
-    const segs = SPLIT.map(s=>({...s, amt:splitAmt(s)}));
+    const topup = k && !k.skip ? k.topup : 0;
+    const base = splitSegs();
+    const segs = topup>0 ? [...base, { id:'deduct', name:`Вычет · ${k?k.name:''}`, amt:topup, color:'#C2443B' }] : base;
+    const total = segs.reduce((s,x)=>s+x.amt,0);
     el.innerHTML = `<label>Влияние на свободный бюджет</label>
       <div class="fr-seg">${segs.map(s=>`<i style="flex:${Math.max(s.amt,1)};background:${s.color}"></i>`).join('')}</div>
-      <div class="fr-leg">${segs.map(s=>`<div class="lr"><span class="dot" style="background:${s.color}"></span>${s.name}<span class="v">${money(s.amt)}</span></div>`).join('')}</div>`;
+      <div class="fr-leg">${segs.map(s=>`<div class="lr"><span class="dot" style="background:${s.color}"></span>${s.name}<span class="pct">${total>0?Math.round(s.amt/total*100):0}%</span><span class="v">${s.id==='deduct'?'−':''}${money(s.amt)}</span></div>`).join('')}</div>`;
   }
 
   /* step 4 — свободные деньги */
   function stepSummary(body, foot){
     const pool = freePool();
-    const segs = SPLIT.map(s=>({...s, amt:splitAmt(s)}));
+    const segs = splitSegs();
     const freeAmt = segs.find(s=>s.id==='free').amt;
     body.innerHTML = `
       <h1 class="fr-h1">Обязательное — оплачено. Управляйте свободными деньгами.</h1>
       <div class="fr-pool">
         <div class="hd"><span class="v">${money(pool)} ₸</span><span class="k">всего свободно</span></div>
-        <div class="fr-seg">${segs.map(s=>`<i style="flex:${s.amt};background:${s.color}"></i>`).join('')}</div>
-        <div class="fr-legend">${segs.map(s=>`<div class="lr"><span class="dot" style="background:${s.color}"></span>${s.name}<span class="pct">${Math.round(s.pct*100)}%</span><span class="v">${money(s.amt)} ₸</span></div>`).join('')}</div>
+        <div class="fr-seg">${segs.map(s=>`<i style="flex:${Math.max(s.amt,1)};background:${s.color}"></i>`).join('')}</div>
+        <div class="fr-legend">${segs.map(s=>`<div class="lr"><span class="dot" style="background:${s.color}"></span>${s.name}<span class="pct">${segPct(s.amt)}%</span><span class="v">${money(s.amt)} ₸</span></div>`).join('')}</div>
       </div>
       <div class="fr-freecard">
         <div class="fi">📈</div>
         <div class="ft"><div class="a">Свободно ${money(freeAmt)} ₸</div><div class="b">Куда направим? Депозит 16,5% · копилка на цель</div></div>
       </div>
-      <p style="font-size:12px;color:var(--text2);font-weight:500;line-height:1.5;margin:16px 4px 0;text-align:center;">Это мягкие ориентиры по категориям — отдельные счета не создаются. Если выйдете за лимит, я пришлю уведомление, но платёж пройдёт.</p>`;
-    foot.innerHTML = `<button class="btn btn-primary" id="frCta">Распределить и подтвердить</button>
-      <div class="fr-swipe">FACE ID НА СЛЕДУЮЩЕМ ШАГЕ</div>`;
-    q('#frCta').addEventListener('click', runFace);
+      <p style="font-size:12px;color:var(--text2);font-weight:500;line-height:1.5;margin:16px 4px 0;text-align:center;"></p>`;
+    foot.innerHTML = `<button class="btn btn-primary" id="frCta">Продолжить</button>
+      <div class="fr-swipe">ДАЛЕЕ — СЧЕТА ДЕТЯМ</div>`;
+    q('#frCta').addEventListener('click', advance);
   }
 
   /* ── Face ID → success ───────────────────────────────────── */
