@@ -275,6 +275,18 @@ services:
       keycloak: { condition: service_started }
       eureka-server: { condition: service_started }
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: maqsat-frontend
+    # nginx serves the built SPA and proxies /api -> gateway (see frontend/nginx.conf).
+    ports: ["${FRONTEND_HOST_PORT:-8090}:80"]
+    depends_on:
+      gateway: { condition: service_started }
+    restart: unless-stopped
+    networks: [maqsat]
+
 networks:
   maqsat:
     driver: bridge
