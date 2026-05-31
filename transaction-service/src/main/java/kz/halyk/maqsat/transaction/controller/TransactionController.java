@@ -1,6 +1,7 @@
 package kz.halyk.maqsat.transaction.controller;
 
 import jakarta.validation.Valid;
+import java.time.Instant;
 import java.util.List;
 import kz.halyk.maqsat.common.security.CurrentUser;
 import kz.halyk.maqsat.transaction.dto.TransactionRequest;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -36,5 +38,15 @@ public class TransactionController {
     public List<TransactionResponse> list() {
         String userId = CurrentUser.current().userId();
         return service.listForUser(userId).stream().map(TransactionResponse::from).toList();
+    }
+
+    /**
+     * Service-to-service read endpoint used by analytics-service batch ETL.
+     * Bound to the internal Docker network — no user JWT required.
+     * Returns all transactions with occurredAt >= since, ordered ascending.
+     */
+    @GetMapping("/internal/since")
+    public List<TransactionResponse> since(@RequestParam Instant since) {
+        return service.findSince(since);
     }
 }

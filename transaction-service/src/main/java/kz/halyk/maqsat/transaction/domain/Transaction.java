@@ -48,4 +48,26 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TransactionStatus status;
+
+    /** Whether the transaction debits or credits the account. Defaults to DEBIT. */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Direction direction;
+
+    /** High-level operation type used for analytics segmentation. Defaults to PURCHASE. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "operation_type", nullable = false)
+    private OperationType operationType;
+
+    /** ISO 4217 currency code. Defaults to KZT. */
+    @Column(nullable = false, length = 3)
+    private String currency;
+
+    /** Free-text details or reference (e.g. transfer description). Nullable. */
+    @Column(length = 512)
+    private String details;
+
+    /** Account balance after the transaction was applied. Nullable. */
+    @Column(name = "balance_after", precision = 15, scale = 2)
+    private BigDecimal balanceAfter;
 }

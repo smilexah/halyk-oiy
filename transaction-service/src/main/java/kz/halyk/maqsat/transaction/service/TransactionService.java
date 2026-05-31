@@ -8,10 +8,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import kz.halyk.maqsat.transaction.client.FamilyClient;
+import kz.halyk.maqsat.transaction.domain.Direction;
+import kz.halyk.maqsat.transaction.domain.OperationType;
 import kz.halyk.maqsat.transaction.domain.Transaction;
 import kz.halyk.maqsat.transaction.domain.TransactionStatus;
 import kz.halyk.maqsat.transaction.dto.ChildLimitView;
 import kz.halyk.maqsat.transaction.dto.TransactionRequest;
+import kz.halyk.maqsat.transaction.dto.TransactionResponse;
 import kz.halyk.maqsat.transaction.event.TransactionEventPublisher;
 import kz.halyk.maqsat.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +43,11 @@ public class TransactionService {
         txn.setMcc(request.mcc());
         txn.setOccurredAt(request.occurredAt() != null ? request.occurredAt() : Instant.now());
         txn.setCategoryName(categorizationEngine.categorize(request.mcc(), request.merchant()));
+        txn.setDirection(request.direction() != null ? request.direction() : Direction.DEBIT);
+        txn.setOperationType(request.operationType() != null ? request.operationType() : OperationType.PURCHASE);
+        txn.setCurrency(request.currency() != null ? request.currency() : "KZT");
+        txn.setDetails(request.details());
+        txn.setBalanceAfter(request.balanceAfter());
 
         ChildLimitView limit = familyClient.getChildLimit(bearer, userId);
         BigDecimal shortfall = childShortfall(userId, txn, limit);
@@ -106,5 +114,14 @@ public class TransactionService {
     @Transactional(readOnly = true)
     public List<Transaction> listForUser(String userId) {
         return repository.findByUserIdOrderByOccurredAtDesc(userId);
+    }
+
+    /** Returns all POSTED transactions with occurredAt >= since, ordered ascending. Used by analytics-service ETL. */
+    @Transactional(readOnly = true)
+    public List<TransactionResponse> findSince(Instant since) {
+        return repository.findByOccurredAtGreaterThanEqualOrderByOccurredAtAsc(since)
+                .stream()
+                .map(TransactionResponse::from)
+                .toList();
     }
 }

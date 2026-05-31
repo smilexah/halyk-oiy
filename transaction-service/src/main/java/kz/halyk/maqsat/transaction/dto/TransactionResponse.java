@@ -14,7 +14,12 @@ public record TransactionResponse(
         String mcc,
         String categoryName,
         Instant occurredAt,
-        String status
+        String status,
+        String direction,
+        String operationType,
+        String currency,
+        String details,
+        BigDecimal balanceAfter
 ) {
     public static TransactionResponse from(Transaction t) {
         return new TransactionResponse(
@@ -26,7 +31,12 @@ public record TransactionResponse(
                 t.getMcc(),
                 t.getCategoryName(),
                 t.getOccurredAt(),
-                t.getStatus() != null ? t.getStatus().name() : null
+                t.getStatus() != null ? t.getStatus().name() : null,
+                t.getDirection() != null ? t.getDirection().name() : null,
+                t.getOperationType() != null ? t.getOperationType().name() : null,
+                t.getCurrency(),
+                t.getDetails(),
+                t.getBalanceAfter()
         );
     }
 }
