@@ -57,7 +57,7 @@ export default function ManageView({
         ))}
         <div
           className={cn(
-            'sticky bottom-[calc(70px+env(safe-area-inset-bottom))] z-[25] -mx-[18px] mt-1 bg-bg px-[18px] pb-2 pt-2',
+            'bottom-[calc(70px+env(safe-area-inset-bottom))] z-[25] -mx-[18px] mt-1 bg-bg px-[18px] pb-2 pt-2',
             depPending <= 0 && 'text-center',
           )}
         >
