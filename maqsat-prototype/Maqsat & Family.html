@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Maqsat & Family — Halyk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="family.css" />
+</head>
+<body data-theme="light" data-accent="green">
+<template id="__bundler_thumbnail">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <rect width="100" height="100" fill="#00815F"/>
+    <circle cx="38" cy="42" r="11" fill="#F1A400"/>
+    <circle cx="62" cy="42" r="11" fill="#fff"/>
+    <rect x="30" y="60" width="40" height="9" rx="4.5" fill="#fff"/>
+  </svg>
+</template>
+
+<div class="device">
+  <div class="notch"></div>
+  <div class="app" id="app">
+
+    <!-- top bar -->
+    <header class="topbar">
+      <a class="back" href="index.html" aria-label="Назад в Halyk">
+        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </a>
+      <div class="brand">
+        <div class="b1">Maqsat <span class="mk">&amp; Family</span></div>
+        <div class="b2">Семья Нурлановых · 5 участников</div>
+      </div>
+      <button class="helpbtn" id="plaqueBtn" aria-label="Как это работает">ⓘ</button>
+    </header>
+
+    <!-- role switcher -->
+    <div class="roles" id="roles">
+      <button class="role" data-role="papa" data-on="1">
+        <span class="crown">👑</span>
+        <span class="av">👨🏻</span>
+        <span class="nm">Асхат</span>
+        <span class="rl">Папа</span>
+      </button>
+      <button class="role" data-role="mama" data-on="0">
+        <span class="av">👩🏻</span>
+        <span class="nm">Динара</span>
+        <span class="rl">Мама</span>
+      </button>
+      <button class="role" data-role="child" data-on="0">
+        <span class="av">🧒🏻</span>
+        <span class="nm">Мадеке</span>
+        <span class="rl">Сын · 14</span>
+      </button>
+    </div>
+
+    <main class="body" id="body">
+
+      <!-- ════════ ПАПА (owner) ════════ -->
+      <section class="rolepane on" data-pane="papa">
+        <div class="wallet">
+          <div class="avs"><span>👩🏻</span><span>👧🏻</span><span>🧒🏻</span></div>
+          <div class="wt">💚 Семейный кошелёк · общий</div>
+          <div class="wa"><span id="walletLeft">115 800</span> <span class="c">₸</span></div>
+          <div class="wsub">из 200 000 ₸ · выделено на месяц</div>
+          <div class="wbar"><i style="width:58%"></i></div>
+          <div class="wmeta"><span>Потрачено 84 200 ₸</span><span>Доступ: Динара</span></div>
+        </div>
+
+        <div class="modeswitch" id="modeSwitch">
+          <button data-mode="first" data-on="1"><span class="me">✨</span>Первый раз</button>
+          <button data-mode="power" data-on="0"><span class="me">⚡</span>Опытный</button>
+        </div>
+        <div class="modecap" id="modeCap">Демо · как агент ведёт нового пользователя</div>
+
+        <div class="salhero" id="salHero"></div>
+
+        <div class="sectitle">Участники группы <span class="more" id="manageBtn">Управление</span></div>
+        <div class="card" id="membersCard"></div>
+
+        <div class="sectitle">Цели и виртуальные карты <span class="ai">AI · NBA</span></div>
+        <p class="hint"><span class="he">🔒</span><span class="ht">Карты под цели. Деньги остаются на счёте Асхата — это <b>виртуальный слой</b> с маской лимитов.</span></p>
+        <div class="vscroll" id="vcards"></div>
+
+        <div class="sectitle">Семейная цель</div>
+        <div class="goal" id="goalCard">
+          <div class="ph">
+            <span class="em">🗼</span>
+            <div class="gt"><div class="a">Париж 2027</div><div class="b">Отпуск · 2 взрослых + 1 ребёнок</div></div>
+          </div>
+          <div class="gb">
+            <div class="gbar"><i style="width:62%"></i></div>
+            <div class="gnums">
+              <div><span class="now">740 000 ₸</span> <span class="tgt">/ 1 200 000 ₸</span></div>
+              <div class="gpct">62%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sectitle">Карты детей · лимиты <span class="ai">AI-контроль</span></div>
+        <div class="card" id="kidsCard"></div>
+
+        <div class="sectitle">AI-медиатор бюджета <span class="ai">Еженедельно</span></div>
+        <div class="mediator">
+          <div class="mh">
+            <span class="bot">🤖</span>
+            <span class="mt">Резюме недели<span>Независимый анализ · без обвинений</span></span>
+            <span class="mtag">NEW</span>
+          </div>
+          <div class="mbody">
+            Категория <b>«Рестораны»</b> выросла на <span class="up">+25%</span> выше прогноза.
+            Чтобы успеть накопить на <b>Париж 2027</b>, рекомендую снизить лимит на развлечения на <b>10%</b> для всех участников.
+          </div>
+          <div class="mrec">
+            <span class="ri">🎯</span>
+            <span class="rt">Новый лимит «Развлечения»: <b>45 000 ₸</b> → <b>40 500 ₸</b> в месяц</span>
+          </div>
+          <div class="mbtns">
+            <button class="btn btn-primary btn-sm" id="medAccept">Принять рекомендацию</button>
+            <button class="btn btn-ghost btn-sm" data-toast="Напомним через неделю" style="width:auto; padding-left:16px; padding-right:16px;">Позже</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ МАМА (co-parent, from Kaspi) ════════ -->
+      <section class="rolepane" data-pane="mama">
+        <div class="wallet">
+          <div class="wt">💚 Семейный кошелёк · доступ</div>
+          <div class="wa">115 800 <span class="c">₸</span></div>
+          <div class="wsub">выделил Асхат · продукты и быт</div>
+          <div class="wbar"><i style="width:58%"></i></div>
+          <div class="wmeta"><span>Лимит 200 000 ₸ / мес</span><span>Обновится 1 июня</span></div>
+        </div>
+
+        <p class="hint"><span class="he">🔗</span><span class="ht">Вы присоединились по приглашению Асхата и привязали свою карту <b>Kaspi Gold</b>. Деньги тратятся из семейного кошелька Halyk.</span></p>
+
+        <div class="salhero" id="mamaHero">
+          <div class="sh-greet">Привет, <b>Динара</b> 👋 пришла зарплата <b>+185 000 ₸</b></div>
+          <div class="sh-top" style="margin-top:4px;">
+            <span class="bot">🤖</span>
+            <div class="sh-t"><div class="b">Общие счета Асхат уже закрывает — пополнять необязательно. Хотите часть отправить в семейную цель или создать <b>личную</b>?</div></div>
+          </div>
+          <div class="mama-acts">
+            <button class="btn btn-soft btn-sm" data-toast="💚 +30 000 ₸ в семейный кошелёк">＋ В общий кошелёк · 30 000 ₸</button>
+            <button class="btn btn-ghost btn-sm" data-toast="Хорошо — Асхат закроет общие счета">Пропустить</button>
+          </div>
+        </div>
+
+        <div class="sectitle">Личная цель <span class="ai">только ваша</span></div>
+        <div class="goal" id="mamaGoal">
+          <div class="ph">
+            <span class="em">👗</span>
+            <div class="gt"><div class="a">Платье для Аминош</div><div class="b">Личная цель · не видна остальным</div></div>
+          </div>
+          <div class="gb">
+            <div class="gbar"><i style="width:35%"></i></div>
+            <div class="gnums">
+              <div><span class="now">14 000 ₸</span> <span class="tgt">/ 40 000 ₸</span></div>
+              <div class="gpct">35%</div>
+            </div>
+            <button class="btn btn-primary btn-sm" id="mamaGoalTopup" style="margin-top:12px;">Отложить из зарплаты</button>
+          </div>
+        </div>
+
+        <div class="sectitle">Спец-предложения агента <span class="ai">AI</span></div>
+        <div id="offers"></div>
+
+        <div class="sectitle">Ваш вклад в цель «Париж 2027»</div>
+        <div class="goal">
+          <div class="ph">
+            <span class="em">🗼</span>
+            <div class="gt"><div class="a">Париж 2027</div><div class="b">Собрано 740 000 ₸ из 1 200 000 ₸</div></div>
+          </div>
+          <div class="gb">
+            <div class="airules">
+              <div class="airule"><span class="re">💸</span><span class="rt">Ваше правило: <b>весь кэшбэк</b> идёт в цель</span><span class="on">ВКЛ</span></div>
+              <div class="airule"><span class="re">📈</span><span class="rt">Накоплено кэшбэком в этом месяце: <b>8 400 ₸</b></span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sectitle">AI-медиатор бюджета <span class="ai">Еженедельно</span></div>
+        <div class="mediator">
+          <div class="mh">
+            <span class="bot">🤖</span>
+            <span class="mt">Резюме недели<span>Одинаковое для всей семьи</span></span>
+          </div>
+          <div class="mbody">
+            Семья идёт по графику к цели «Париж 2027» 👍 Категория <b>«Рестораны»</b> <span class="up">+25%</span> —
+            агент предложил Асхату мягко снизить лимит развлечений на 10%.
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ РЕБЁНОК (Мадеке, 14) ════════ -->
+      <section class="rolepane" data-pane="child">
+        <div class="vcard" style="width:auto; margin-bottom:4px;">
+          <div class="vtop">
+            <div class="vchip"></div>
+            <div class="vtype">Детская карта<b>Halyk Junior</b></div>
+          </div>
+          <div class="vname">Мадеке Нурланов</div>
+          <div class="vnum">•••• 6203</div>
+          <div class="vbot">
+            <div class="vbal"><div class="k">Доступно сегодня</div><div class="v" id="childToday">2 000 ₸</div></div>
+            <div class="vpct">Лимит 2 000 ₸/день</div>
+          </div>
+        </div>
+
+        <p class="hint"><span class="he">👛</span><span class="ht">Карманные на месяц: <b>15 000 ₸</b> · потрачено 9 400 ₸. Дневной лимит устанавливает папа.</span></p>
+
+        <div class="sectitle">Оплата</div>
+        <div class="card pad" id="payZone">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:46px;height:46px;border-radius:13px;background:var(--gold-soft);display:grid;place-items:center;font-size:23px;flex-shrink:0;">🍽️</div>
+            <div style="flex:1;">
+              <div style="font-size:14.5px;font-weight:800;">Школьная столовая №14</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:2px;font-weight:500;">Комплексный обед</div>
+            </div>
+            <div style="font-size:18px;font-weight:800;">2 500 ₸</div>
+          </div>
+          <button class="btn btn-gold" id="payLunch" style="margin-top:14px;">Оплатить картой · 2 500 ₸</button>
+          <div id="payResult"></div>
+        </div>
+
+        <div class="sectitle">История по карте</div>
+        <div class="card" id="childHistory"></div>
+      </section>
+
+    </main>
+
+    <!-- smart push host (dad role) -->
+    <div id="pushHost" style="position:absolute; left:16px; right:16px; top:calc(150px + env(safe-area-inset-top)); z-index:65; display:none;"></div>
+
+    <!-- scrim + sheets -->
+    <div class="scrim" id="scrim"></div>
+
+    <!-- invite sheet -->
+    <div class="sheet" id="inviteSheet">
+      <div class="grip"></div>
+      <h3>Пригласить в семью</h3>
+      <p class="sh-sub">Отправьте ссылку родственнику. Передавать логин и пароль не нужно — каждый входит под собой.</p>
+      <div class="fieldlbl">Кого добавляем</div>
+      <div class="typepick" id="inviteRole">
+        <label class="typeopt" data-on="1" data-v="coparent"><span class="ti">👩🏻</span><span class="tt"><span class="a">Со-родитель</span><span class="b">Доступ к кошельку, цели, лимитам</span></span><span class="radio"></span></label>
+        <label class="typeopt" data-on="0" data-v="child"><span class="ti">🧒🏻</span><span class="tt"><span class="a">Ребёнок</span><span class="b">Карта с лимитом, под контролем</span></span><span class="radio"></span></label>
+      </div>
+      <div class="plaque" style="margin-top:16px;"><span class="pi">🔒</span><span class="px"><b>Виртуальный слой.</b> Приглашённый получает виртуальную карту с маской лимитов через API — ваш счёт не меняется.</span></div>
+      <button class="btn btn-primary" id="inviteSend" style="margin-top:16px;">Сгенерировать ссылку-приглашение</button>
+    </div>
+
+    <!-- (legacy single-card sheet replaced by full-screen distribution flow below) -->
+
+
+    <!-- goal detail sheet -->
+    <div class="sheet" id="goalSheet">
+      <div class="grip"></div>
+      <h3>🗼 Париж 2027</h3>
+      <p class="sh-sub">Семейный краудфандинг · без сложных счетов. Цель к июлю 2027.</p>
+      <div class="goal" style="box-shadow:none; margin-top:14px; border:1px solid var(--line2);">
+        <div class="gb" style="padding-top:16px;">
+          <div class="gbar"><i style="width:62%"></i></div>
+          <div class="gnums"><div><span class="now">740 000 ₸</span> <span class="tgt">/ 1 200 000 ₸</span></div><div class="gpct">62%</div></div>
+        </div>
+      </div>
+      <div class="fieldlbl">Проактивные правила агента</div>
+      <div class="airules">
+        <div class="airule"><span class="re">🪙</span><span class="rt"><b>Асхат:</b> округлять остатки от покупок в цель</span><span class="on">ВКЛ</span></div>
+        <div class="airule"><span class="re">💸</span><span class="rt"><b>Динара:</b> весь кэшбэк — в цель</span><span class="on">ВКЛ</span></div>
+      </div>
+      <div class="offer" style="margin-top:14px;"><span class="oe">🎁</span><span class="ot"><span class="a">Идёте по графику!</span><span class="b">Партнёрская скидка −8% на тур через маркетплейс банка</span></span><button class="obtn" data-toast="Промокод сохранён 🎉">Забрать</button></div>
+      <button class="btn btn-primary" id="goalTopup" style="margin-top:16px;">Пополнить цель</button>
+    </div>
+
+    <!-- plaque / how it works -->
+    <div class="sheet" id="plaqueSheet">
+      <div class="grip"></div>
+      <h3>Как это работает</h3>
+      <p class="sh-sub">Архитектура «виртуального слоя» — без переписывания процессинга банка.</p>
+      <div class="plaque" style="margin-top:14px;"><span class="pi">💳</span><span class="px"><b>Деньги физически</b> остаются на основном счёте Асхата.</span></div>
+      <div class="plaque"><span class="pi">🎭</span><span class="px"><b>Карты семьи</b> — виртуальные карты с программной маской лимитов через API.</span></div>
+      <div class="plaque"><span class="pi">⚡</span><span class="px"><b>Авторизация</b> транзакции проверяется на уровне приложения — процессинг не меняется.</span></div>
+      <div class="plaque"><span class="pi">🤝</span><span class="px"><b>AI-медиатор</b> переводит конфликты из эмоций в рациональные рекомендации для всей семьи.</span></div>
+      <button class="btn btn-soft" id="plaqueClose" style="margin-top:18px;">Понятно</button>
+    </div>
+
+    <!-- ════ Salary distribution overlay (full-screen) ════ -->
+    <div class="distribute" id="distribute">
+      <div class="dist-hd">
+        <button class="x" id="distClose" aria-label="Закрыть">✕</button>
+        <div class="t">Распределение зарплаты<span id="distSubt">Агент · план распределения</span></div>
+      </div>
+      <div class="distcounter" id="distCounter">
+        <div class="k">Осталось распределить</div>
+        <div class="v"><span id="distLeft">146 590</span> <span class="c">₸</span></div>
+        <div class="dbar"><i id="distBarI" style="width:0%"></i></div>
+        <div class="meta"><span id="distMovedLbl">Распределено 0 ₸</span><span id="distSalLbl">Зарплата 146 590 ₸</span></div>
+      </div>
+      <div class="dist-list" id="distList"></div>
+      <div class="distbar">
+        <div class="summ"><span id="distSumm">Откройте и пополните карты под цели</span><span><b id="distCount">0</b> · <span id="distTotal">4</span></span></div>
+        <button class="btn btn-primary" id="distConfirm" disabled>Подтвердить распределение</button>
+      </div>
+    </div>
+
+    <!-- ════ Goal Detail full-screen view (Париж 2027) ════ -->
+    <div class="goaldetail" id="goalDetail">
+      <div class="gd-hd">
+        <button class="x" id="gdClose" aria-label="Назад">←</button>
+        <div class="t" id="gdTitle">Париж 2027<span id="gdTitleSub">Семейная цель · краудфандинг</span></div>
+        <button class="x" id="gdInfo" aria-label="Как это работает">ⓘ</button>
+      </div>
+      <div class="gd-body">
+        <div class="gd-hero">
+          <div class="gd-emoji" id="gdEmoji">🗼</div>
+          <div class="gd-name" id="gdName">Париж 2027</div>
+          <div class="gd-sub" id="gdHeroSub">Отпуск · 2 взрослых + 1 ребёнок · к июлю 2027</div>
+          <div class="gd-big" id="gdBig">740 000 <span class="of" id="gdTarget">/ 1 200 000 ₸</span></div>
+          <div class="gd-bar"><i id="gdBar" style="width:62%"></i></div>
+          <div class="gd-meta"><span class="pct" id="gdPct">62% собрано</span><span id="gdLeft">осталось 460 000 ₸</span></div>
+        </div>
+
+        <div class="gd-stats">
+          <div class="gd-stat"><div class="k">Собрано</div><div class="v acc" id="gdStatNow">740 000 ₸</div></div>
+          <div class="gd-stat"><div class="k">В месяц</div><div class="v" id="gdStatMonth">≈ 57 000 ₸</div></div>
+          <div class="gd-stat"><div class="k">Срок</div><div class="v" id="gdStatTerm">8 мес.</div></div>
+        </div>
+
+        <div class="gd-ai" style="margin-top:14px;">
+          <span class="bot">🤖</span>
+          <span class="at" id="gdAiText">По текущему темпу <b>≈ 57 000 ₸/мес</b> цель закроется <b>к 5 августа</b> — на 3 недели раньше срока. Хотите ускорить? Включите автопополнение для всех.</span>
+        </div>
+
+        <div class="gd-sec" id="gdMembersSec">Кто пополняет <span class="more" id="gdManage">Права доступа</span></div>
+        <div class="gd-card" id="gdMembers"></div>
+
+        <div class="gd-sec">Проактивные правила агента <span class="ai">AI</span></div>
+        <div class="gd-card" id="gdRules"></div>
+
+        <div class="gd-sec">Партнёрское предложение <span class="ai">по графику</span></div>
+        <div class="offer" id="gdOffer" style="margin:0 16px;"><span class="oe">🎁</span><span class="ot"><span class="a">Идёте по графику!</span><span class="b" id="gdOfferB">Скидка −8% на тур через маркетплейс банка + ставка 16.5%</span></span><button class="obtn" data-toast="Промокод сохранён 🎉">Забрать</button></div>
+        <div style="height:8px;"></div>
+      </div>
+      <div class="gd-foot">
+        <div class="row">
+          <button class="btn btn-ghost" id="gdInvite" style="flex:0 0 auto;width:auto;padding-left:18px;padding-right:18px;">＋ Участник</button>
+          <button class="btn btn-primary" id="gdTopupBtn">Пополнить цель</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- top-up sheet -->
+    <div class="sheet" id="gdTopupSheet">
+      <div class="grip"></div>
+      <h3 id="gdTopupTitle">Пополнить «Париж 2027»</h3>
+      <p class="sh-sub">Деньги уходят на сберегательный счёт цели под 16.5%. Списание с вашей карты Halyk.</p>
+      <div class="amtchips" id="gdChips">
+        <button class="amtchip" data-v="10000">10 000</button>
+        <button class="amtchip" data-on="1" data-v="25000">25 000</button>
+        <button class="amtchip" data-v="50000">50 000</button>
+        <button class="amtchip" data-v="100000">100 000</button>
+      </div>
+      <div class="amtfield"><input id="gdAmt" inputmode="numeric" value="25 000" aria-label="Сумма" /><span class="c">₸</span></div>
+      <button class="btn btn-primary" id="gdTopupConfirm" style="margin-top:16px;">Пополнить на 25 000 ₸</button>
+    </div>
+
+    <!-- add member sheet -->
+    <div class="sheet" id="gdMemberSheet">
+      <div class="grip"></div>
+      <h3>Добавить участника</h3>
+      <p class="sh-sub" id="gdMemberSub">Выберите из контактов. Имя можно изменить — так участник будет отображаться у вас.</p>
+      <div class="fieldlbl">Контакт</div>
+      <div class="contactlist" id="gdContacts"></div>
+      <div class="namefield">
+        <div class="fieldlbl">Отображать как</div>
+        <input class="txtin" id="gdMemberName" placeholder="Имя участника" />
+      </div>
+      <div class="fieldlbl" style="margin-top:14px;">Права доступа</div>
+      <div class="permpick" id="gdPermPick">
+        <label class="permopt" data-on="1" data-v="view"><span class="pe">👁️</span><span class="pt"><span class="a">Только просмотр</span><span class="b">Видит прогресс, не трогает деньги</span></span><span class="radio"></span></label>
+        <label class="permopt" data-v="topup"><span class="pe">➕</span><span class="pt"><span class="a">Может пополнять</span><span class="b">Вносит деньги в цель</span></span><span class="radio"></span></label>
+        <label class="permopt" data-v="full"><span class="pe">🔁</span><span class="pt"><span class="a">Пополнять и снимать</span><span class="b">Полный доступ к средствам цели</span></span><span class="radio"></span></label>
+      </div>
+      <button class="btn btn-primary" id="gdMemberAdd" style="margin-top:16px;">Отправить приглашение</button>
+    </div>
+
+    <!-- ════ Face ID verification ════ -->
+    <div class="faceid" id="faceid">
+      <div class="facebox">
+        <div class="corners"><span></span><span></span><span></span><span></span></div>
+        <div class="scan"></div>
+        <div class="face">🙂</div>
+        <div class="fi-check"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="#00815F" stroke-width="6"/><path d="M30 52 L44 66 L72 36" fill="none" stroke="#00815F" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+      <div class="fi-text" id="fiText">Сканирование лица…</div>
+      <div class="fi-sub" id="fiSub">Подтвердите распределение зарплаты с помощью Face ID</div>
+    </div>
+
+    <!-- success overlay -->
+    <div class="success" id="success">
+      <div class="ring">
+        <svg class="checkmark" viewBox="0 0 100 100"><circle class="cm-circle" cx="50" cy="50" r="48"/><path class="cm-check" d="M28 52 L44 67 L73 35"/></svg>
+      </div>
+      <h2 id="successTitle">Готово!</h2>
+      <p id="successText"></p>
+      <button class="btn btn-primary" id="successDone">Отлично</button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+  </div><!-- /app -->
+</div><!-- /device -->
+
+<script src="family.js"></script>
+<script src="distribute.js"></script>
+<script src="goaldetail.js"></script>
+</body>
+</html>

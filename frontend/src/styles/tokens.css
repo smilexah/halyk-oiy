@@ -1,0 +1,62 @@
+/* ============================================================================
+   Maqsat / Halyk design tokens — single source of truth.
+   Brand identity: gold + green. Theme axis: [data-theme]. Accent axis:
+   [data-accent]. These CSS variables are switched at runtime by ThemeProvider
+   and consumed by Tailwind's theme mapping in index.css (so e.g. `bg-card`,
+   `text-muted`, `bg-accent` all react to light/dark + green/gold instantly).
+   ========================================================================== */
+
+:root {
+  /* surfaces (light theme defaults) */
+  --bg: #f5f5f5;
+  --card: #ffffff;
+  --text: #1a1a1a;
+  --text2: #6b6b6b;
+  --line: #ececec;
+  --line2: #f3f3f3;
+
+  --shadow: 0 1px 2px rgba(20, 20, 20, 0.04), 0 6px 20px rgba(20, 20, 20, 0.06);
+  --shadow-lg: 0 10px 40px rgba(20, 20, 20, 0.12);
+
+  /* fixed brand inks */
+  --gold: #f1a400;
+  --gold-d: #e08900;
+  --gold-soft: #fdf1da;
+  --green: #00815f;
+  --green-d: #006b4f;
+  --green-soft: #e7f3ef;
+  --pos: #00815f;
+  --neg: #d14343;
+
+  /* accent axis (default: green) */
+  --accent: #00815f;
+  --accent-d: #006b4f;
+  --accent-soft: var(--green-soft);
+  --accent-grad: linear-gradient(135deg, #11a37b 0%, #00815f 52%, #006b4f 100%);
+  --accent-glow: 0, 129, 95;
+  --balance-grad: var(--accent-grad);
+
+  --radius: 16px;
+}
+
+[data-accent='gold'] {
+  --accent: #f1a400;
+  --accent-d: #e08900;
+  --accent-soft: var(--gold-soft);
+  --accent-grad: linear-gradient(135deg, #f8be3c 0%, #f1a400 48%, #e08900 100%);
+  --accent-glow: 241, 164, 0;
+}
+
+[data-theme='dark'] {
+  --bg: #0f1714;
+  --card: #17231e;
+  --text: #f2f0e9;
+  --text2: #9db1a8;
+  --green-soft: #15302a;
+  --gold-soft: #2a2417;
+  --line: #22332c;
+  --line2: #1c2a24;
+  --pos: #3fcfa3;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 16px 50px rgba(0, 0, 0, 0.5);
+}
