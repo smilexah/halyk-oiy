@@ -49,6 +49,11 @@ public class GoalService {
         return goalRepository.findByVirtualAccount_OwnerIdOrderByCreatedAtDesc(ownerId);
     }
 
+    @Transactional(readOnly = true)
+    public List<Goal> internalListForUser(String userId) {
+        return goalRepository.findByVirtualAccount_OwnerIdOrderByCreatedAtDesc(userId);
+    }
+
     @Transactional
     public Goal contribute(String ownerId, UUID goalId, BigDecimal amount) {
         Goal goal = goalRepository.findById(goalId)

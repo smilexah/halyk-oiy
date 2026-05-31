@@ -20,6 +20,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+/**
+ * @deprecated Legacy Anthropic-backed AI assistant. Use parse-budget-plan-service and
+ *             financial-agent-service instead. Kept for one release as a fallback reference.
+ */
+@Deprecated
 @Service
 @RequiredArgsConstructor
 @Slf4j

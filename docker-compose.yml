@@ -267,6 +267,127 @@ services:
       keycloak: { condition: service_started }
       eureka-server: { condition: service_started }
 
+  analytics-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: analytics-service }
+    container_name: maqsat-analytics
+    environment:
+      <<: [*service-env, *db-env]
+      PORT: "8090"
+      POSTGRES_DB: analytics_db
+      ANALYTICS_WORKER_URL: http://analytics-worker:9000
+    ports: ["8090:8090"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_started }
+      eureka-server: { condition: service_started }
+      keycloak: { condition: service_started }
+
+  financial-agent-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: financial-agent-service }
+    container_name: maqsat-financial-agent
+    environment:
+      <<: [*service-env, *db-env]
+      PORT: "8091"
+      POSTGRES_DB: priors_db
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports: ["8091:8091"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_started }
+      eureka-server: { condition: service_started }
+      keycloak: { condition: service_started }
+
+  summary-llm-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: summary-llm-service }
+    container_name: maqsat-summary-llm
+    environment:
+      <<: *service-env
+      PORT: "8092"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports: ["8092:8092"]
+    depends_on:
+      kafka: { condition: service_started }
+      eureka-server: { condition: service_started }
+      keycloak: { condition: service_started }
+
+  recommendation-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: recommendation-service }
+    container_name: maqsat-recommendation
+    environment:
+      <<: *service-env
+      PORT: "8093"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports: ["8093:8093"]
+    depends_on:
+      kafka: { condition: service_started }
+      eureka-server: { condition: service_started }
+      keycloak: { condition: service_started }
+
+  parse-budget-plan-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: parse-budget-plan-service }
+    container_name: maqsat-parse-budget
+    environment:
+      <<: *service-env
+      PORT: "8094"
+    ports: ["8094:8094"]
+    depends_on:
+      eureka-server: { condition: service_started }
+      keycloak: { condition: service_started }
+
+  alser-mock-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: alser-mock-service }
+    container_name: maqsat-alser-mock
+    environment:
+      <<: [*service-env, *db-env]
+      PORT: "8095"
+      POSTGRES_DB: alser_db
+    ports: ["8095:8095"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      eureka-server: { condition: service_started }
+      keycloak: { condition: service_started }
+
+  halyk-travel-mock-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { MODULE: halyk-travel-mock-service }
+    container_name: maqsat-halyk-travel-mock
+    environment:
+      <<: [*service-env, *db-env]
+      PORT: "8096"
+      POSTGRES_DB: travel_db
+    ports: ["8096:8096"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      eureka-server: { condition: service_started }
+      keycloak: { condition: service_started }
+
 networks:
   maqsat:
     driver: bridge

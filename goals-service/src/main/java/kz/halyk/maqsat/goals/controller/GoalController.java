@@ -38,6 +38,14 @@ public class GoalController {
         return service.listForUser(userId).stream().map(GoalResponse::from).toList();
     }
 
+    /** Internal endpoint consumed by recommendation-service to fetch a user's goals
+     *  without requiring the user's JWT. Secured by the permitAll rule for
+     *  {@code /api/goals/internal/**} in SecurityConfig. */
+    @GetMapping("/internal/{userId}")
+    public List<GoalResponse> internal(@PathVariable String userId) {
+        return service.internalListForUser(userId).stream().map(GoalResponse::from).toList();
+    }
+
     @PostMapping("/{id}/contribute")
     public GoalResponse contribute(@PathVariable UUID id, @Valid @RequestBody ContributeRequest request) {
         String userId = CurrentUser.current().userId();

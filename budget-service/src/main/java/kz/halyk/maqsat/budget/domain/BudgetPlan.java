@@ -44,6 +44,15 @@ public class BudgetPlan {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @Column(nullable = false)
+    private int version = 1;
+
+    @Column(name = "created_by_ai", nullable = false)
+    private boolean createdByAi = false;
+
+    @Column(name = "superseded_by")
+    private UUID supersededBy;
+
     @OneToMany(mappedBy = "plan", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BudgetCategory> categories = new ArrayList<>();
 

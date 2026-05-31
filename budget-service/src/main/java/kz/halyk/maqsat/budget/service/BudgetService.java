@@ -4,13 +4,19 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 import kz.halyk.maqsat.budget.domain.BudgetCategory;
 import kz.halyk.maqsat.budget.domain.BudgetPlan;
 import kz.halyk.maqsat.budget.domain.OwnerType;
+import kz.halyk.maqsat.budget.dto.ActivePlanView;
+import kz.halyk.maqsat.budget.dto.ActivePlanView.CategoryLimitView;
 import kz.halyk.maqsat.budget.dto.CreatePlanRequest;
 import kz.halyk.maqsat.budget.dto.DashboardResponse;
 import kz.halyk.maqsat.budget.dto.DashboardResponse.CategoryView;
+import kz.halyk.maqsat.budget.dto.ParsedPlanPayload;
 import kz.halyk.maqsat.budget.exception.PlanNotFoundException;
 import kz.halyk.maqsat.budget.repository.BudgetPlanRepository;
 import lombok.RequiredArgsConstructor;
@@ -87,9 +93,68 @@ public class BudgetService {
                         () -> log.debug("No category '{}' in plan {}", categoryName, plan.get().getId()));
     }
 
+    /**
+     * Returns the active budget plan for the given user as a lightweight projection,
+     * for use by the analytics-service internal endpoint.
+     *
+     * @param userId the user's identifier (JWT sub)
+     * @return an {@link ActivePlanView} or {@code null} if no active plan exists
+     */
+    @Transactional(readOnly = true)
+    public ActivePlanView getActivePlan(String userId) {
+        Optional<BudgetPlan> planOpt = activePlan(userId, OwnerType.USER, LocalDate.now());
+        if (planOpt.isEmpty()) {
+            return null;
+        }
+        BudgetPlan plan = planOpt.get();
+        String period = DateTimeFormatter.ofPattern("yyyy-MM").format(plan.getPeriodStart());
+        List<CategoryLimitView> cats = plan.getCategories().stream()
+                .map(c -> new CategoryLimitView(c.getName(), c.getLimitAmount(), c.getType().name()))
+                .toList();
+        return new ActivePlanView(plan.getId(), period, cats);
+    }
+
+    @Transactional
+    public BudgetPlan replan(String userId, ParsedPlanPayload payload) {
+        OwnerType type = payload.ownerType() != null ? payload.ownerType() : OwnerType.USER;
+        String ownerId = payload.ownerId() != null ? payload.ownerId() : userId;
+
+        BudgetPlan previous = planRepository
+                .findFirstByOwnerIdAndOwnerTypeAndSupersededByIsNullOrderByVersionDesc(ownerId, type)
+                .orElse(null);
+        int nextVersion = previous == null ? 1 : previous.getVersion() + 1;
+
+        YearMonth ym = YearMonth.parse(payload.period());
+        BudgetPlan next = new BudgetPlan();
+        next.setOwnerId(ownerId);
+        next.setOwnerType(type);
+        next.setPeriodStart(ym.atDay(1));
+        next.setPeriodEnd(ym.atEndOfMonth());
+        next.setCreatedAt(Instant.now());
+        next.setVersion(nextVersion);
+        next.setCreatedByAi(payload.createdByAi());
+        payload.categories().forEach(pc -> {
+            BudgetCategory c = new BudgetCategory();
+            c.setName(pc.name());
+            c.setType(pc.type());
+            c.setLimitAmount(pc.limitAmount());
+            c.setSpentAmount(BigDecimal.ZERO);
+            next.addCategory(c);
+        });
+        planRepository.save(next);
+
+        if (previous != null) {
+            previous.setSupersededBy(next.getId());
+            planRepository.save(previous);
+        }
+        log.info("Replanned user={} version {} → {} (createdByAi={})",
+                ownerId, nextVersion - 1, nextVersion, payload.createdByAi());
+        return next;
+    }
+
     private Optional<BudgetPlan> activePlan(String ownerId, OwnerType ownerType, LocalDate date) {
         return planRepository
-                .findFirstByOwnerIdAndOwnerTypeAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqualOrderByPeriodStartDesc(
+                .findFirstByOwnerIdAndOwnerTypeAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqualAndSupersededByIsNullOrderByPeriodStartDesc(
                         ownerId, ownerType, date, date);
     }
 }

@@ -6,3 +6,7 @@ CREATE DATABASE transaction_db;
 CREATE DATABASE goals_db;
 CREATE DATABASE family_db;
 CREATE DATABASE keycloak_db;
+CREATE DATABASE analytics_db;
+CREATE DATABASE priors_db;
+CREATE DATABASE alser_db;
+CREATE DATABASE travel_db;
