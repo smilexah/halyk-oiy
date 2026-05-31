@@ -6,6 +6,8 @@ import Button from '../../shared/ui/Button'
 import { fmt, parseAmount } from '../../shared/lib/format'
 import { useToast } from '../../shared/ui/toast'
 import { cn } from '../../shared/lib/cn'
+import { useTransactions } from '../../shared/api/hooks'
+import { txnToRow } from '../../shared/api/view'
 
 interface Contact { id: string; e: string; n: string }
 const CONTACTS: Contact[] = [
@@ -26,6 +28,10 @@ export default function TransfersScreen() {
   const [sel, setSel] = useState<Contact | null>(null)
   const [amount, setAmount] = useState(20000)
   const [focused, setFocused] = useState(false)
+
+  // Live transactions when authenticated; otherwise the demo list.
+  const { data: txns } = useTransactions()
+  const recent = txns?.length ? txns.slice(0, 6).map(txnToRow) : RECENT
 
   return (
     <Screen>
@@ -89,7 +95,7 @@ export default function TransfersScreen() {
 
       <div className="mt-[22px]">
         <h3 className="mx-0.5 mb-2.5 text-[14px] font-extrabold">Недавние переводы</h3>
-        {RECENT.map((r, i) => (
+        {recent.map((r, i) => (
           <div key={i} className="flex items-center gap-3 border-b border-line2 py-[13px] last:border-0">
             <span className="grid h-[42px] w-[42px] place-items-center rounded-[13px] bg-gold-soft text-[19px]">{r.e}</span>
             <div className="flex-1">

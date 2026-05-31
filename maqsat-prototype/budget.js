@@ -191,7 +191,7 @@
         <div class="bfree" id="bFree"></div>
 
         <div class="cta-wrap stickybar" style="margin-top:14px;">
-          <button class="btn btn-primary" id="bConfirm">Посмотреть рекомендаций</button>
+          <button class="btn btn-primary" id="bConfirm" ${(window.recoStoriesCount ?? RECO.length)===0?'disabled':''}>Посмотреть рекомендации <span class="cta-count">${window.recoStoriesCount ?? RECO.length}</span></button>
         </div>
       </div>
       <p class="disclaimer">Подтверждение касается только рекомендаций (Блок 2). Обязательные платежи оплачиваются кнопкой «Пополнить». <a id="bReplay" style="color:var(--accent);text-decoration:underline;cursor:pointer;">↺ первый вход</a></p>`;
@@ -221,7 +221,12 @@
       inp.addEventListener('blur', ()=>{ inp.value=money(c.limit); });
     });
     const chatBtn = q('#bChat'); if(chatBtn) chatBtn.addEventListener('click', openChat);
-    q('#bConfirm').addEventListener('click', confirmPlan);
+    const confBtn = q('#bConfirm');
+    const recoN = (window.recoStoriesCount ?? RECO.length);
+    if(confBtn && recoN>0) confBtn.addEventListener('click', () => {
+      if(window.openRecoStories) window.openRecoStories();
+      else confirmPlan();
+    });
     q('#bReplay').addEventListener('click', () => {
       if(window.resetFirstRun) window.resetFirstRun();
       else { state='onboard'; resetState(); viewOnboard(); }

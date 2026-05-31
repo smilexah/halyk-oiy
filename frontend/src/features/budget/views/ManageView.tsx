@@ -12,7 +12,8 @@ interface Props {
   toggleMandatory: (id: string) => void
   payMandatory: () => void
   setRecoLimit: (id: string, v: number) => void
-  confirmPlan: () => void
+  recoCount: number
+  showRecos: () => void
   replay: () => void
 }
 
@@ -23,7 +24,8 @@ export default function ManageView({
   toggleMandatory,
   payMandatory,
   setRecoLimit,
-  confirmPlan,
+  recoCount,
+  showRecos,
   replay,
 }: Props) {
   const depPending = mandatory.filter((c) => c.sel && needOf(c) > 0 && !c.paid).reduce((s, c) => s + needOf(c), 0)
@@ -107,7 +109,12 @@ export default function ManageView({
         </div>
 
         <div className="sticky bottom-[calc(70px+env(safe-area-inset-bottom))] z-[25] -mx-[18px] mt-3.5 bg-bg px-[18px] pb-2 pt-2">
-          <Button onClick={confirmPlan}>Посмотреть рекомендаций</Button>
+          <Button onClick={showRecos} disabled={recoCount === 0}>
+            Посмотреть рекомендации
+            <span className="grid h-[22px] min-w-[22px] place-items-center rounded-full bg-white/25 px-1.5 text-[12.5px] font-extrabold tabular-nums">
+              {recoCount}
+            </span>
+          </Button>
         </div>
       </div>
 

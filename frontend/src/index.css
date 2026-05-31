@@ -97,6 +97,16 @@
       transform: translateY(150px);
     }
   }
+
+  /* reco-stories: segmented progress fill (0 → 100% over the slide duration) */
+  @keyframes rsbar {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
+    }
+  }
 }
 
 @layer components {

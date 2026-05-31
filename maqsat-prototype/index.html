@@ -228,7 +228,11 @@ body{
 .btn:active{ transform:scale(.975); }
 .btn-primary{ background:var(--cta); color:var(--cta-text); box-shadow:0 8px 22px rgba(var(--accent-glow),.32); }
 .btn-primary:hover{ filter:brightness(1.04); }
+.btn-primary:disabled,.btn:disabled{ background:var(--line2); color:var(--text2); box-shadow:none; cursor:not-allowed; filter:none; }
+.btn:disabled:active{ transform:none; }
+.btn:disabled .cta-count{ background:rgba(0,0,0,.08); color:var(--text2); }
 .btn-ghost{ background:transparent; color:var(--pos); border:2px solid var(--pos); padding:14px; }
+.cta-count{ display:inline-grid; place-items:center; min-width:22px; height:22px; padding:0 6px; border-radius:11px; background:rgba(255,255,255,.24); color:#fff; font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums; }
 .btn:disabled{ opacity:.5; cursor:not-allowed; }
 
 .disclaimer{ text-align:center; font-size:11px; color:var(--text2); margin-top:14px; line-height:1.5; padding:0 10px; }
@@ -1453,6 +1457,7 @@ function init(){
 init();
 </script>
 <script src="budget.js"></script>
+<script src="recos.js"></script>
 <script src="firstrun.js"></script>
 </body>
 </html>
