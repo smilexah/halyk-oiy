@@ -36,6 +36,34 @@ spring:
           uri: lb://ai-assistant-service
           predicates:
             - Path=/api/ai/**
+        - id: analytics-service
+          uri: lb://analytics-service
+          predicates:
+            - Path=/api/analytics/**
+        - id: financial-agent-service
+          uri: lb://financial-agent-service
+          predicates:
+            - Path=/api/financial-agent/**
+        - id: parse-budget-plan-service
+          uri: lb://parse-budget-plan-service
+          predicates:
+            - Path=/api/parse-budget/**
+        - id: summary-llm-service
+          uri: lb://summary-llm-service
+          predicates:
+            - Path=/api/summary/**
+        - id: recommendation-service
+          uri: lb://recommendation-service
+          predicates:
+            - Path=/api/recommendations/**
+        - id: alser-mock-service
+          uri: lb://alser-mock-service
+          predicates:
+            - Path=/api/alser/**
+        - id: halyk-travel-mock-service
+          uri: lb://halyk-travel-mock-service
+          predicates:
+            - Path=/api/halyk-travel/**
         # Proxy each service's OpenAPI doc so the gateway's Swagger UI can aggregate them.
         - id: openapi-auth
           uri: lb://auth-service
@@ -65,6 +93,34 @@ spring:
           uri: lb://integration-service
           predicates: [ "Path=/v3/api-docs/integration-service" ]
           filters: [ "RewritePath=/v3/api-docs/integration-service, /v3/api-docs" ]
+        - id: openapi-analytics
+          uri: lb://analytics-service
+          predicates: [ "Path=/v3/api-docs/analytics-service" ]
+          filters: [ "RewritePath=/v3/api-docs/analytics-service, /v3/api-docs" ]
+        - id: openapi-financial-agent
+          uri: lb://financial-agent-service
+          predicates: [ "Path=/v3/api-docs/financial-agent-service" ]
+          filters: [ "RewritePath=/v3/api-docs/financial-agent-service, /v3/api-docs" ]
+        - id: openapi-parse-budget
+          uri: lb://parse-budget-plan-service
+          predicates: [ "Path=/v3/api-docs/parse-budget-plan-service" ]
+          filters: [ "RewritePath=/v3/api-docs/parse-budget-plan-service, /v3/api-docs" ]
+        - id: openapi-summary-llm
+          uri: lb://summary-llm-service
+          predicates: [ "Path=/v3/api-docs/summary-llm-service" ]
+          filters: [ "RewritePath=/v3/api-docs/summary-llm-service, /v3/api-docs" ]
+        - id: openapi-recommendation
+          uri: lb://recommendation-service
+          predicates: [ "Path=/v3/api-docs/recommendation-service" ]
+          filters: [ "RewritePath=/v3/api-docs/recommendation-service, /v3/api-docs" ]
+        - id: openapi-alser
+          uri: lb://alser-mock-service
+          predicates: [ "Path=/v3/api-docs/alser-mock-service" ]
+          filters: [ "RewritePath=/v3/api-docs/alser-mock-service, /v3/api-docs" ]
+        - id: openapi-halyk-travel
+          uri: lb://halyk-travel-mock-service
+          predicates: [ "Path=/v3/api-docs/halyk-travel-mock-service" ]
+          filters: [ "RewritePath=/v3/api-docs/halyk-travel-mock-service, /v3/api-docs" ]
   security:
     oauth2:
       resourceserver:
@@ -105,6 +161,13 @@ springdoc:
       - { name: family-service, url: /v3/api-docs/family-service }
       - { name: ai-assistant-service, url: /v3/api-docs/ai-assistant-service }
       - { name: integration-service, url: /v3/api-docs/integration-service }
+      - { name: analytics-service, url: /v3/api-docs/analytics-service }
+      - { name: financial-agent-service, url: /v3/api-docs/financial-agent-service }
+      - { name: parse-budget-plan-service, url: /v3/api-docs/parse-budget-plan-service }
+      - { name: summary-llm-service, url: /v3/api-docs/summary-llm-service }
+      - { name: recommendation-service, url: /v3/api-docs/recommendation-service }
+      - { name: alser-mock-service, url: /v3/api-docs/alser-mock-service }
+      - { name: halyk-travel-mock-service, url: /v3/api-docs/halyk-travel-mock-service }
 
 logging:
   structured:

@@ -47,3 +47,31 @@ services:
   ai-assistant-service:
     <<: *jvm
     volumes: ["./ai-assistant-service/build/libs/ai-assistant-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  analytics-service:
+    <<: *jvm
+    volumes: ["./analytics-service/build/libs/analytics-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  financial-agent-service:
+    <<: *jvm
+    volumes: ["./financial-agent-service/build/libs/financial-agent-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  parse-budget-plan-service:
+    <<: *jvm
+    volumes: ["./parse-budget-plan-service/build/libs/parse-budget-plan-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  summary-llm-service:
+    <<: *jvm
+    volumes: ["./summary-llm-service/build/libs/summary-llm-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  recommendation-service:
+    <<: *jvm
+    volumes: ["./recommendation-service/build/libs/recommendation-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  alser-mock-service:
+    <<: *jvm
+    volumes: ["./alser-mock-service/build/libs/alser-mock-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]
+
+  halyk-travel-mock-service:
+    <<: *jvm
+    volumes: ["./halyk-travel-mock-service/build/libs/halyk-travel-mock-service-0.0.1-SNAPSHOT.jar:/app/app.jar:ro"]

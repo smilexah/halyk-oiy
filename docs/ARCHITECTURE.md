@@ -516,3 +516,88 @@ bash demo/run-demo.sh
 | Kafka listeners на хост `kafka`, не `0.0.0.0` | apache/kafka KRaft format отвергает `0.0.0.0` в advertised. |
 | `KC_HOSTNAME` фиксирует issuer | Токены с хоста и из сети имеют один `iss`, валидируются одинаково. |
 | Cyrillic JSON через `--data-binary @file` | Windows-шелл иначе превращает кириллицу в `?`. |
+
+---
+
+## 17. AI plane
+
+The AI plane adds four AI/orchestration services that form a reactive pipeline triggered by analytics events.
+
+### Сервисы
+
+| Сервис | Порт | БД | Назначение |
+|---|---|---|---|
+| **analytics-service** | 8090 | analytics_db | Вычисляет метрики, публикует `analytics.metrics-computed` и `analytics.plan-drift-detected` |
+| **financial-agent-service** | 8091 | priors_db | Потребляет `plan-drift-detected`, вызывает OpenAI для ре-плана, пересылает в parse-budget-plan-service |
+| **summary-llm-service** | 8092 | — | Потребляет `metrics-computed`, формирует мультиязычный AI-отчёт, публикует `ai.summary-generated` |
+| **recommendation-service** | 8093 | analytics_db | Потребляет `metrics-computed`, сопоставляет предложения партнёров через OpenAI, публикует `ai.recommendation-ready` |
+| **parse-budget-plan-service** | 8094 | — | Принимает `BudgetPlanProposal` от financial-agent, валидирует и пересылает в budget-service replan endpoint |
+| **alser-mock-service** | 8095 | alser_db | Каталог электроники + применение скидок |
+| **halyk-travel-mock-service** | 8096 | travel_db | Каталог авиа/отель/тур + бронирование со скидкой |
+| **ai-assistant-service** | 8086 | — | **(deprecated — shim to parse-budget-plan-service)** |
+
+### Последовательность событий
+
+```mermaid
+sequenceDiagram
+    participant TXN as transaction-service
+    participant AN as analytics-service
+    participant FA as financial-agent-service
+    participant PB as parse-budget-plan-service
+    participant BS as budget-service
+    participant SL as summary-llm-service
+    participant NO as notification-service
+    participant RC as recommendation-service
+    participant IS as integration-service
+    participant AL as alser-mock-service
+    participant HT as halyk-travel-mock-service
+
+    TXN->>AN: POST /api/analytics/metrics/{userId}/{period}/recompute
+    AN-->>AN: compute metrics + detect drift
+
+    par metrics-computed → summary
+        AN-)SL: analytics.metrics-computed
+        SL->>SL: OpenAI summarise (ru/kk/en)
+        SL-)NO: ai.summary-generated
+        NO-->>NO: log AI-SUMMARY push
+    and metrics-computed → recommendation
+        AN-)RC: analytics.metrics-computed
+        RC->>AL: GET /api/alser/offers?audience=...
+        RC->>HT: GET /api/halyk-travel/offers?audience=...
+        RC->>RC: OpenAI rank offers
+        RC-)IS: ai.recommendation-ready
+        IS->>AL: GET /api/alser/offers/{id}
+        IS->>HT: GET /api/halyk-travel/offers/{id}
+        IS-->>IS: log PARTNER targeting
+    end
+
+    AN-)FA: analytics.plan-drift-detected
+    FA->>FA: OpenAI propose new budget (fallback: priors-baseline)
+    FA->>PB: POST /api/parse-budget/replan
+    PB->>BS: POST /api/budget/internal/replan/{userId}
+    BS-->>BS: version++ , supersede prior plan
+```
+
+### Метрики (Micrometer)
+
+| Счётчик | Теги | Где |
+|---|---|---|
+| `maqsat.replans` | `trigger=drift` | financial-agent-service / PlanDriftListener |
+| `maqsat.openai.calls` | `service`, `outcome=ok\|error\|fallback` | financial-agent, summary-llm, recommendation |
+| `maqsat.summaries.generated` | `language` | summary-llm-service |
+| `maqsat.recommendations` | `partner=ALSER\|HALYK_TRAVEL` | recommendation-service |
+| `maqsat.parse_budget.replan` | `outcome=ok\|invalid\|error` | parse-budget-plan-service |
+
+Dashboard panels for these metrics are defined in `observability/grafana/dashboards/maqsat-business.json` (row "AI plane").
+
+### Demo
+
+```bash
+bash demo/run-ai-plane.sh
+```
+
+Что проверяет скрипт:
+1. Базовый план `{Продукты: 80 000, Рестораны: 40 000, Транспорт: 30 000}`.
+2. 5 × 15 000 в Рестораны (75 000 > лимита 40 000) — дрейф.
+3. `POST /api/analytics/metrics/{userId}/{period}/recompute` — запускает AI plane.
+4. Через ~8 с: новый план с `version=2, created_by_ai=true`, лог `AI-SUMMARY` в notification-service, лог `PARTNER` в integration-service.

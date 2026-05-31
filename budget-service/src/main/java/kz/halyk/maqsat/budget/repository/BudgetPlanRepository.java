@@ -11,4 +11,10 @@ public interface BudgetPlanRepository extends JpaRepository<BudgetPlan, UUID> {
 
     Optional<BudgetPlan> findFirstByOwnerIdAndOwnerTypeAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqualOrderByPeriodStartDesc(
             String ownerId, OwnerType ownerType, LocalDate start, LocalDate end);
+
+    Optional<BudgetPlan> findFirstByOwnerIdAndOwnerTypeAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqualAndSupersededByIsNullOrderByPeriodStartDesc(
+            String ownerId, OwnerType ownerType, LocalDate start, LocalDate end);
+
+    Optional<BudgetPlan> findFirstByOwnerIdAndOwnerTypeAndSupersededByIsNullOrderByVersionDesc(
+            String ownerId, OwnerType ownerType);
 }

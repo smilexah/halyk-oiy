@@ -11,7 +11,12 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-/** Minimal Anthropic Messages API client. Returns the assistant's text content. */
+/**
+ * Minimal Anthropic Messages API client. Returns the assistant's text content.
+ *
+ * @deprecated Use OpenAI-backed clients in financial-agent-service or summary-llm-service instead.
+ */
+@Deprecated
 @Component
 @RequiredArgsConstructor
 public class AnthropicClient {

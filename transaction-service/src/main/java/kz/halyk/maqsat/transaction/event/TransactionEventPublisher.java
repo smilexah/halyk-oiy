@@ -23,7 +23,12 @@ public class TransactionEventPublisher {
                 t.getAmount(),
                 t.getMcc(),
                 t.getCategoryName(),
-                t.getOccurredAt());
+                t.getOccurredAt(),
+                t.getDirection() != null ? t.getDirection().name() : null,
+                t.getOperationType() != null ? t.getOperationType().name() : null,
+                t.getCurrency(),
+                t.getDetails(),
+                t.getBalanceAfter());
         kafkaTemplate.send(EventTopics.TRANSACTION_CATEGORIZED, t.getUserId(), event);
     }
 
