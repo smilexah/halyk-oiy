@@ -1,183 +1,278 @@
 # Maqsat & Family
 
-Microservices backend for a Halyk SuperApp add-on:
+**Интеллектуальная система управления личными и семейными финансами** — надстройка над Halyk SuperApp.
+Превращает пассивный банковский счёт в проактивного финансового помощника: AI-бюджетирование, накопительные цели и семейный контур с детскими лимитами и SOS-одобрением платежей.
 
-1. **AI budgeting** — income is split into categories; spending is auto-categorized and tracked against the budget.
-2. **Goals / Maqsat** — savings held on virtual accounts.
-3. **Family** — a shared layer on top: shared budgets and goals, adult/child roles, child daily limits, and the **SOS approval** flow (a child hits a daily limit at the register → the parent gets a push → one-tap approval).
+![Architecture](docs/architecture.jpg)
 
-📐 Полная архитектура и техническая спецификация: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+> Полная спецификация: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · AI-плоскость: [docs/AI_AND_ANALYTICS_USAGE.md](docs/AI_AND_ANALYTICS_USAGE.md)
 
-## Stack
+---
 
-Java 21 · Gradle (Kotlin DSL) multi-module monorepo · Spring Boot 3.4.1 · Spring Cloud 2024.0.0 ·
-PostgreSQL + Flyway (database-per-service) · Kafka (KRaft) · Keycloak (OIDC) · Eureka ·
-optional Prometheus + Grafana + Loki + Tempo via Micrometer/OTel.
+## Что умеет система
 
-## Modules & ports
+| Блок | Суть |
+|---|---|
+| **AI-бюджетирование** | Доход разбивается на категории агентом; траты автоматически категоризируются по MCC и трекаются против плана |
+| **Цели / Maqsat** | Накопления на виртуальных счетах с прогрессом и бонусными программами |
+| **Family** | Семейные группы, роли adult/child, дневные лимиты ребёнка и **конфликтный сценарий**: ребёнок упёрся в лимит на кассе → SOS родителю → одобрение в один тап |
+| **AI-плоскость** | Drift-детекция → автоматический ре-план бюджета (OpenAI); мультиязычные финансовые отчёты; таргетинг партнёрских предложений (Alser, Halyk Travel) |
 
-| Module                 | Port | DB             | Purpose                                       |
-|------------------------|------|----------------|-----------------------------------------------|
-| gateway                | 8080 | —              | Routing `/api/<svc>/**` + JWT validation      |
-| keycloak               | 8081 | keycloak_db    | Identity provider                             |
-| budget-service         | 8082 | budget_db      | Plans, categories, limits, tracking           |
-| transaction-service    | 8083 | transaction_db | Transactions + categorization engine          |
-| goals-service          | 8084 | goals_db       | Goals, virtual accounts                        |
-| family-service         | 8085 | family_db      | Groups, roles, child limits, SOS approval     |
-| ai-assistant-service   | 8086 | —              | LLM orchestrator                              |
-| notification-service   | 8087 | —              | Push imitation / Smart-Push                   |
-| integration-service    | 8088 | —              | Bonuses / offers (stub)                       |
-| auth-service           | 8089 | —              | Onboarding / invites via Keycloak Admin API   |
-| eureka-server          | 8761 | —              | Service discovery                             |
+### Ключевые принципы
 
-## Architecture principles
+- **Виртуальный слой** — деньги остаются на основном счёте; семейные/целевые счета — маска через API, процессинг банка не трогается
+- **Без передачи паролей** — участники добавляются по инвайту и логинятся сами; временный пароль с принудительной сменой
+- **Роли в домене** — `adult`/`child` живут в `family-service`, Keycloak отвечает только «кто ты»
+- **Soft-block вместо decline** — превышение лимита ребёнком даёт статус `PENDING_APPROVAL`, не `DECLINED`; родитель одобряет в один тап и это действует до конца дня
 
-- **Virtual layer.** Money physically sits on the main account; family/goal accounts are virtual with a limit mask applied through the API. The bank processing is never touched.
-- **No credential sharing.** Members are added by invite and each logs in themselves. An invitee gets a temporary password with a forced reset (`requiredActions: UPDATE_PASSWORD`).
-- **Roles live in family-service.** `adult`/`child` are tied to a family group, not to Keycloak. Keycloak only answers "who are you".
-- **Thin `common` module.** Only event contracts, `ApiError`, `CurrentUser`. No business logic.
-- **Cross-service state via Kafka**; synchronous reads via REST/WebClient through Eureka (`lb://`).
+---
 
-## Build
+## Стек
 
-```bash
-./gradlew build            # all modules
-./gradlew :budget-service:build
-./gradlew :budget-service:test --tests "Categorization*"
-```
+| Слой | Технологии |
+|---|---|
+| Язык / сборка | Java 21, Gradle (Kotlin DSL), multi-module monorepo |
+| Framework | Spring Boot 3.4.1, Spring Cloud 2024.0.0 |
+| Gateway | Spring Cloud Gateway (reactive/WebFlux) + Netflix Eureka |
+| База данных | PostgreSQL 16, database-per-service, Flyway-миграции |
+| Брокер | Apache Kafka 3.9 (KRaft, без ZooKeeper) |
+| Identity | Keycloak 26 (OIDC), OAuth2 resource server на каждом сервисе |
+| AI | OpenAI `gpt-4o-mini` (financial-agent, summary-llm, recommendation), Anthropic (ai-assistant) |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, TanStack Query 5 |
+| Observability | Micrometer + OTel → Prometheus / Tempo / Loki / Grafana / Alloy |
 
-## Run the stack
+---
+
+## Сервисы
+
+### Транзакционная плоскость
+
+| Сервис | Порт | БД | Назначение |
+|---|---|---|---|
+| `gateway` | 8080 | — | Маршрутизация `/api/<svc>/**` + JWT-валидация |
+| `eureka-server` | 8761 | — | Service discovery |
+| `auth-service` | 8089 | — | Онбординг и инвайт-флоу (Keycloak Admin API) |
+| `transaction-service` | 8083 | transaction_db | Транзакции + MCC-категоризация; Kafka producer |
+| `budget-service` | 8082 | budget_db | Планы, категории, лимиты, трекинг; Kafka consumer |
+| `goals-service` | 8084 | goals_db | Цели и виртуальные счета |
+| `family-service` | 8085 | family_db | Группы, роли, детские лимиты, SOS-одобрение |
+| `notification-service` | 8087 | — | Push-уведомления и SOS-алерты через Kafka |
+
+### AI и аналитическая плоскость
+
+| Сервис | Порт | БД | Назначение |
+|---|---|---|---|
+| `analytics-service` | 8090 | analytics_db | Вычисление метрик, drift-детекция |
+| `ai-assistant-service` | 8086 | — | LLM-оркестратор (Anthropic) |
+| `financial-agent-service` | 8091 | priors_db | OpenAI ре-план при drift |
+| `summary-llm-service` | 8092 | — | Мультиязычные AI-отчёты (ru/kk/en) |
+| `recommendation-service` | 8093 | analytics_db | Таргетинг партнёрских предложений через OpenAI |
+| `parse-budget-plan-service` | 8094 | — | Валидация и сохранение ре-плана от financial-agent |
+
+### Экосистемная плоскость
+
+| Сервис | Порт | БД | Назначение |
+|---|---|---|---|
+| `integration-service` | 8088 | — | Бонусы и офферы партнёров (stub) |
+| `alser-mock-service` | 8095 | alser_db | Каталог электроники Alser |
+| `halyk-travel-mock-service` | 8096 | travel_db | Каталог авиа/отель/тур Halyk Travel |
+| `frontend` | 8090/80 | — | React SPA, proxies `/api` → gateway |
+
+> Только `gateway`, `keycloak`, `eureka-server` публикуют хост-порты. Остальные сервисы доступны изнутри сети через `lb://<svc>` и снаружи только через gateway (`:8080`).
+
+---
+
+## Быстрый старт
+
+### Требования
+
+- Docker + Docker Compose
+- Java 21 (для сборки)
+- `.env` файл (скопируй из `.env.example`)
+
+### Первый запуск
 
 ```bash
 cp .env.example .env
-docker compose up --build              # builds an image per service from source
+# Заполни OPENAI_API_KEY, ANTHROPIC_API_KEY, DATABASE_PASSWORD в .env
+
+docker compose up --build
 ```
 
-**Fast dev mode** (run locally-built jars in JRE containers — much quicker to iterate):
+### Быстрый режим (рекомендуется для разработки)
+
+Собирает jar'ы локально и запускает их в лёгких JRE-контейнерах — намного быстрее:
 
 ```bash
 ./gradlew build
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
 
-- Eureka dashboard: http://localhost:8761
-- Keycloak: http://localhost:8081 (admin/admin)
-- Gateway: http://localhost:8080
-- Aggregated Swagger UI (all services in one dropdown): http://localhost:8080/swagger-ui.html
-
-Optional observability overlay (Grafana at http://localhost:3000, anonymous Admin):
+### С observability (Grafana, Prometheus, Loki, Tempo)
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build
-# or with the fast dev jars:
-docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.observability.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml \
+               -f docker-compose.observability.yml up -d
 ```
 
-Provisioned Grafana dashboards (folder **Maqsat**):
+После запуска (~60 с на инициализацию Keycloak):
 
-| Dashboard | What it shows |
-|-----------|---------------|
-| [Overview](http://localhost:3000/d/maqsat-overview) | service up/down, HTTP rate & p95, JVM heap, live logs (clickable **TraceID → Tempo**) |
-| [Service Graph & Traces](http://localhost:3000/d/maqsat-service-graph) | Node Graph from traces (incl. Kafka edges `transaction → notification`), span call rates, edge table |
-| [Business Metrics](http://localhost:3000/d/maqsat-business) | transactions by status, limits exceeded (SOS), parent approvals, spend tracked per category |
+| Адрес | Что |
+|---|---|
+| http://localhost:8080/swagger-ui.html | Агрегированный Swagger UI всех сервисов |
+| http://localhost:8080 | Gateway (все API через него) |
+| http://localhost:8081 | Keycloak Admin (admin / admin) |
+| http://localhost:8761 | Eureka Dashboard |
+| http://localhost:3000 | Grafana (anonymous Admin, только с observability overlay) |
 
-Pipeline: every service ships **metrics** (Prometheus via Eureka SD), **traces** (OTLP → Tempo; one
-trace spans gateway → transaction → Kafka → budget/notification/integration), and **logs** (Alloy → Loki,
-ECS JSON with `traceId`). Tempo's metrics-generator feeds the service graph back into Prometheus.
-Correlation works both ways: a log's `traceId` links to its trace, and a span links to its logs.
+---
 
-## Demo
-
-Run the whole thing at once:
+## Сборка и тесты
 
 ```bash
-bash demo/run-demo.sh
+./gradlew build                                                    # все модули
+./gradlew :budget-service:build                                    # один сервис
+./gradlew :transaction-service:test --tests "CategorizationEngineTest"
 ```
 
-Or step through it (all calls go through the gateway on :8080). Get a token first:
+После изменения кода в dev-режиме:
 
 ```bash
-# password grant via the public maqsat-app client
-PAPA=$(curl -s -X POST http://localhost:8081/realms/maqsat/protocol/openid-connect/token \
-  -d grant_type=password -d client_id=maqsat-app -d username=papa -d password=papa \
-  | python -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
+./gradlew :<svc>:build
+docker compose -f docker-compose.yml -f docker-compose.dev.yml restart <svc>
 ```
 
-### 1. Budget tracking
+---
+
+## Демо
+
+### Полный сквозной сценарий
 
 ```bash
-# Category names are Cyrillic — send them from a UTF-8 file so the shell can't mangle them.
+bash demo/run-demo.sh       # бюджет + семья + конфликтный сценарий + AI
+bash demo/run-ai-plane.sh   # AI-плоскость: drift → ре-план → отчёт → рекомендации
+```
+
+### Вручную — получить токен
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:8081/realms/maqsat/protocol/openid-connect/token \
+  -d grant_type=password -d client_id=maqsat-app \
+  -d username=papa -d password=papa | python -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
+```
+
+### 1. Бюджет и категоризация
+
+```bash
+# Создать план (категории на русском — через файл, чтобы не сломал shell)
 curl -s -X POST http://localhost:8080/api/budget/plan \
-  -H "Authorization: Bearer $PAPA" -H "Content-Type: application/json; charset=utf-8" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json; charset=utf-8" \
   --data-binary @demo/plan.json
 
+# Провести транзакцию (MCC 5411 → «Продукты»)
 curl -s -X POST http://localhost:8080/api/transactions \
-  -H "Authorization: Bearer $PAPA" -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   --data-binary '{"accountId":"acc-1","amount":5000,"merchant":"MAGNUM","mcc":"5411"}'
 
-curl -s http://localhost:8080/api/budget/dashboard -H "Authorization: Bearer $PAPA"
-# -> "Продукты" spent grows to 5000 (transaction -> Kafka -> budget consumer)
+# Посмотреть дашборд
+curl -s http://localhost:8080/api/budget/dashboard -H "Authorization: Bearer $TOKEN"
 ```
 
-### 2. Family group + invite (no password sharing)
+### 2. Семья и инвайт
 
 ```bash
 GID=$(curl -s -X POST http://localhost:8080/api/family/groups \
-  -H "Authorization: Bearer $PAPA" -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   --data-binary '{"name":"Maqsat Family"}' | python -c "import sys,json;print(json.load(sys.stdin)['id'])")
 
-# Creates the child in Keycloak (temp password + forced UPDATE_PASSWORD) and a CHILD membership.
+# Создаёт ребёнка в Keycloak (временный пароль + UPDATE_PASSWORD) и CHILD-мемберство
 curl -s -X POST http://localhost:8080/api/auth/invite \
-  -H "Authorization: Bearer $PAPA" -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   --data-binary "{\"groupId\":\"$GID\",\"username\":\"bala-jr\",\"role\":\"CHILD\",\"dailyLimit\":2500}"
 ```
 
-### 3. Conflict scenario (the headline flow)
+### 3. Конфликтный сценарий (SOS)
 
 ```bash
-CHILD=$(curl -s -X POST http://localhost:8081/realms/maqsat/protocol/openid-connect/token \
+CHILD_TOKEN=$(curl -s -X POST http://localhost:8081/realms/maqsat/protocol/openid-connect/token \
   -d grant_type=password -d client_id=maqsat-app -d username=child -d password=child \
   | python -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
-CSUB=$(python -c "import base64,json;p='$CHILD'.split('.')[1];p+='='*(-len(p)%4);print(json.loads(base64.urlsafe_b64decode(p))['sub'])")
 
-# Put the child in the group with a 3000 daily limit
-curl -s -X POST http://localhost:8080/api/family/groups/$GID/members \
-  -H "Authorization: Bearer $PAPA" -H "Content-Type: application/json" \
-  --data-binary "{\"userId\":\"$CSUB\",\"role\":\"CHILD\",\"dailyLimit\":3000}"
+# Ребёнок пытается потратить 5000 при лимите 3000 → PENDING_APPROVAL + SOS родителю
+TXN_ID=$(curl -s -X POST http://localhost:8080/api/transactions \
+  -H "Authorization: Bearer $CHILD_TOKEN" -H "Content-Type: application/json" \
+  --data-binary '{"accountId":"child-acc","amount":5000,"merchant":"Sushi Bar","mcc":"5812"}' \
+  | python -c "import sys,json;print(json.load(sys.stdin)['id'])")
 
-# Child tries to spend 5000 at the register -> held, not declined
-curl -s -X POST http://localhost:8080/api/transactions \
-  -H "Authorization: Bearer $CHILD" -H "Content-Type: application/json" \
-  --data-binary '{"accountId":"child-acc","amount":5000,"merchant":"Sushi Bar","mcc":"5812"}'
-# -> status PENDING_APPROVAL; family-service emits LimitExceeded;
-#    notification-service logs an SOS push (docker logs maqsat-notification)
-
-# Parent approves in one tap (use the transaction id from above)
-curl -s -X POST http://localhost:8080/api/family/approvals/<transactionId> \
-  -H "Authorization: Bearer $PAPA" -H "Content-Type: application/json" \
-  --data-binary "{\"childUserId\":\"$CSUB\",\"approvedAmount\":5000}"
-# -> LimitOverrideApproved -> transaction-service posts the payment (status POSTED)
+# Родитель одобряет в один тап → транзакция POSTED
+curl -s -X POST http://localhost:8080/api/family/approvals/$TXN_ID \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  --data-binary "{\"childUserId\":\"...\",\"approvedAmount\":5000}"
 ```
 
-### 4. Goals & AI
+### 4. AI ре-план бюджета
 
 ```bash
-curl -s -X POST http://localhost:8080/api/goals -H "Authorization: Bearer $PAPA" \
-  -H "Content-Type: application/json" \
-  --data-binary '{"name":"iPhone","targetAmount":600000,"monthlyContribution":50000}'
+# Запустить AI-плоскость вручную (после накопления трат с drift)
+curl -s -X POST "http://localhost:8080/api/analytics/metrics/$USER_ID/2025-05/recompute" \
+  -H "Authorization: Bearer $TOKEN"
 
-# Income -> category plan. Falls back to a rule-based split when ANTHROPIC_API_KEY is unset.
-curl -s -X POST http://localhost:8080/api/ai/budget-plan -H "Authorization: Bearer $PAPA" \
-  -H "Content-Type: application/json" --data-binary '{"monthlyIncome":500000}'
+# Через ~8с: новый план version=2, created_by_ai=true
+curl -s http://localhost:8080/api/budget/dashboard -H "Authorization: Bearer $TOKEN"
 ```
 
-## Notes & gotchas
+---
 
-- **Keycloak issuer.** `KC_HOSTNAME=http://keycloak:8080` fixes the token `iss` so tokens minted via
-  the host (`localhost:8081`) are still validated by in-network services. From an IDE, services default
-  to `issuer-uri=http://localhost:8081/realms/maqsat`.
-- **Kafka host port.** Services use the in-network listener `kafka:9092`; the host can reach the broker
-  on `localhost:29092` (external listener). Listeners bind to the routable `kafka` host because
-  apache/kafka's KRaft format step rejects a `0.0.0.0` advertised address.
-- **Cyrillic over curl.** Send Cyrillic JSON bodies from a UTF-8 file (`--data-binary @file`); a Windows
-  shell may otherwise turn them into `?`.
+## Observability
+
+Каждый сервис экспортирует три сигнала:
+
+- **Метрики** → Micrometer → `/actuator/prometheus` → Prometheus (Eureka SD)
+- **Трейсы** → OTel → Tempo (один трейс охватывает `gateway → transaction → Kafka → budget/notification`)
+- **Логи** → ECS JSON с `traceId`/`spanId` → Alloy → Loki
+
+Дашборды Grafana (папка **Maqsat**):
+
+| Дашборд | Что показывает |
+|---|---|
+| [Overview](http://localhost:3000/d/maqsat-overview) | Статус сервисов, HTTP rate и p95, JVM heap, логи с кликабельным TraceID |
+| [Service Graph & Traces](http://localhost:3000/d/maqsat-service-graph) | Node Graph трейсов, Kafka-рёбра `transaction → notification`, span call rates |
+| [Business Metrics](http://localhost:3000/d/maqsat-business) | Транзакции по статусам, SOS-события, одобрения, расходы по категориям, AI plane метрики |
+
+---
+
+## Gotchas
+
+| Проблема | Решение |
+|---|---|
+| 503 после рестарта | Gateway LB-кеш лагает ~30 с — подождать, не искать баг |
+| Кириллица превращается в `?` | Слать JSON через файл: `--data-binary @demo/plan.json` |
+| `curl localhost:8089` не отвечает | Сервисы не публикуют хост-порты — использовать `localhost:8080/api/...` |
+| `sub` пропадает из JWT | Не переопределять `defaultClientScopes` в `docs/keycloak/realm-export.json` |
+| Postgres на 5432 уже занят | `.env` выставляет `POSTGRES_HOST_PORT=5433` для хоста; внутри сети — `postgres:5432` |
+
+---
+
+## Структура репозитория
+
+```
+halyk-oiy/
+├── common/                     # Kafka-контракты, ApiError, CurrentUser (java-library)
+├── gateway/                    # Spring Cloud Gateway
+├── <service-name>/             # По одному Gradle-модулю на сервис
+├── frontend/                   # React SPA
+├── demo/                       # Демо-скрипты и JSON-фикстуры
+├── docs/
+│   ├── ARCHITECTURE.md         # Полная тех. спецификация с ER-диаграммами
+│   ├── AI_AND_ANALYTICS_USAGE.md
+│   ├── architecture.jpg        # Диаграмма архитектуры
+│   ├── keycloak/               # realm-export.json (монтируется в Keycloak)
+│   ├── db/                     # init-databases.sql (монтируется в PostgreSQL)
+│   └── observability/          # Конфиги Prometheus, Loki, Tempo, Alloy, Grafana
+├── docker-compose.yml
+├── docker-compose.dev.yml      # Overlay: готовые jar вместо сборки образов
+├── docker-compose.observability.yml
+├── Dockerfile                  # Общий, ARG MODULE выбирает сервис
+├── build.gradle.kts
+└── settings.gradle.kts
+```
