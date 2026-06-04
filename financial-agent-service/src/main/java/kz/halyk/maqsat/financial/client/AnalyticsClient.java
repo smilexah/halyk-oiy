@@ -1,6 +1,6 @@
 package kz.halyk.maqsat.financial.client;
 
-import kz.halyk.maqsat.financial.dto.UserMetricsDto;
+import kz.halyk.maqsat.financial.dto.res.UserMetricsDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.stereotype.Component;

@@ -4,7 +4,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import kz.halyk.maqsat.auth.config.KeycloakAdminProperties;
-import kz.halyk.maqsat.auth.dto.InviteRequest;
+import kz.halyk.maqsat.auth.dto.req.InviteRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;

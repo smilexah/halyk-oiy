@@ -2,7 +2,7 @@ package kz.halyk.maqsat.recommendation.client;
 
 import java.math.BigDecimal;
 import java.util.List;
-import kz.halyk.maqsat.recommendation.dto.MatchedOffer;
+import kz.halyk.maqsat.recommendation.dto.res.MatchedOffer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;

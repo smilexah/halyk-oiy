@@ -1,6 +1,6 @@
 package kz.halyk.maqsat.transaction.client;
 
-import kz.halyk.maqsat.transaction.dto.ChildLimitView;
+import kz.halyk.maqsat.transaction.dto.res.ChildLimitView;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;

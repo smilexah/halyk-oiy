@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import kz.halyk.maqsat.common.event.EventTopics;
 import kz.halyk.maqsat.common.event.LimitExceeded;
 import kz.halyk.maqsat.common.event.TransactionCategorized;
-import kz.halyk.maqsat.transaction.domain.Transaction;
+import kz.halyk.maqsat.transaction.entities.Transaction;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;

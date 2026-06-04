@@ -1,7 +1,7 @@
 package kz.halyk.maqsat.financial.client;
 
-import kz.halyk.maqsat.financial.dto.ReplanRequest;
-import kz.halyk.maqsat.financial.dto.ReplanResponse;
+import kz.halyk.maqsat.financial.dto.req.ReplanRequest;
+import kz.halyk.maqsat.financial.dto.res.ReplanResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.stereotype.Component;

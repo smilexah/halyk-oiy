@@ -2,8 +2,8 @@ package kz.halyk.maqsat.parsebudget.client;
 
 import java.util.Optional;
 import java.util.UUID;
-import kz.halyk.maqsat.parsebudget.dto.ActivePlanView;
-import kz.halyk.maqsat.parsebudget.dto.ParsedPlanPayload;
+import kz.halyk.maqsat.parsebudget.dto.req.ParsedPlanPayload;
+import kz.halyk.maqsat.parsebudget.dto.res.ActivePlanView;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;

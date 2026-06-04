@@ -3,7 +3,7 @@ package kz.halyk.maqsat.summary.event;
 import java.time.Instant;
 import kz.halyk.maqsat.common.event.EventTopics;
 import kz.halyk.maqsat.common.event.SummaryGenerated;
-import kz.halyk.maqsat.summary.dto.SummaryResult;
+import kz.halyk.maqsat.summary.dto.res.SummaryResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;

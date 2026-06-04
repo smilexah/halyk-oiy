@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import kz.halyk.maqsat.summary.config.OpenAiProperties;
-import kz.halyk.maqsat.summary.exception.AiResponseException;
+import kz.halyk.maqsat.summary.exceptions.AiResponseException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
