@@ -1,8 +1,0 @@
-{
-  "periodStart": "2026-05-01",
-  "periodEnd": "2026-05-31",
-  "categories": [
-    { "name": "Продукты", "type": "MANDATORY", "limitAmount": 200000 },
-    { "name": "Такси", "type": "DISCRETIONARY", "limitAmount": 30000 }
-  ]
-}

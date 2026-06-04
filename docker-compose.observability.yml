@@ -10,7 +10,7 @@ services:
       - --web.enable-remote-write-receiver   # accept Tempo's generated service-graph/span metrics
       - --enable-feature=exemplar-storage
     volumes:
-      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docs/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports: ["9090:9090"]
     networks: [maqsat]
 
@@ -19,7 +19,7 @@ services:
     container_name: maqsat-loki
     command: ["-config.file=/etc/loki/loki-config.yaml"]
     volumes:
-      - ./observability/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - ./docs/observability/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
     ports: ["3100:3100"]
     networks: [maqsat]
 
@@ -28,7 +28,7 @@ services:
     container_name: maqsat-tempo
     command: ["-config.file=/etc/tempo/tempo.yaml"]
     volumes:
-      - ./observability/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - ./docs/observability/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
     ports:
       - "3200:3200"   # tempo query
       - "4318:4318"   # otlp http
@@ -42,7 +42,7 @@ services:
       - /etc/alloy/config.alloy
       - --server.http.listen-addr=0.0.0.0:12345
     volumes:
-      - ./observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ./docs/observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports: ["12345:12345"]
     depends_on:
@@ -57,8 +57,8 @@ services:
       GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
       GF_AUTH_DISABLE_LOGIN_FORM: "true"
     volumes:
-      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./docs/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docs/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
     ports: ["3000:3000"]
     depends_on:
       prometheus: { condition: service_started }

@@ -41,7 +41,7 @@ services:
       POSTGRES_DB: maqsat
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./db/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+      - ./docs/db/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
     ports: ["${POSTGRES_HOST_PORT:-5432}:5432"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-maqsat}"]
@@ -104,7 +104,7 @@ services:
       KC_HTTP_ENABLED: "true"
       KC_HEALTH_ENABLED: "true"
     volumes:
-      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+      - ./docs/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     ports: ["8081:8080"]
     depends_on:
       postgres: { condition: service_healthy }

@@ -6,3 +6,5 @@
 *.log
 .env
 *:Zone.Identifier
+.claude
+.idea
